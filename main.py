@@ -1,4 +1,6 @@
 import logging
+import time
+import random
 from fastapi import FastAPI, HTTPException, Query
 
 from multiplas.client import BetnacionalAPIClient
@@ -63,7 +65,16 @@ def execute(payload: ExecuteRequest):
             selected = analysis.combinations
 
         results = []
-        for combo in selected:
+        total = len(selected)
+        base_delay = Config.BETWEEN_BETS_DELAY
+
+        for i, combo in enumerate(selected):
+            if i > 0:
+                jitter = random.uniform(-0.3, 0.3) * base_delay
+                delay = max(1.0, base_delay + jitter)
+                logger.info("Waiting %.1fs before bet %d/%d...", delay, i + 1, total)
+                time.sleep(delay)
+
             choices = [
                 {"match_id": e["match_id"], "choice": e["choice"]}
                 for e in combo.entries
@@ -77,14 +88,14 @@ def execute(payload: ExecuteRequest):
                     "combined_prob": combo.combined_prob,
                     "result": resp,
                 })
-                logger.info("Bet #%d placed: %s", combo.rank, resp)
+                logger.info("Bet #%d/%d placed: %s", i + 1, total, resp)
             except Exception as e:
                 results.append({
                     "rank": combo.rank,
                     "matches": combo.matches_summary,
                     "error": str(e),
                 })
-                logger.error("Bet #%d failed: %s", combo.rank, e)
+                logger.error("Bet #%d/%d failed: %s", i + 1, total, e)
 
         balance = api_client.get_balance()
 
@@ -108,6 +119,7 @@ def status():
             "config": {
                 "num_legs": Config.NUM_LEGS,
                 "stake": Config.STAKE,
+                "between_bets_delay": Config.BETWEEN_BETS_DELAY,
                 "api_url": Config.BETNACIONAL_API_URL,
             },
         }

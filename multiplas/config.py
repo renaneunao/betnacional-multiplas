@@ -9,3 +9,4 @@ class Config:
     NUM_LEGS = int(os.getenv("NUM_LEGS", "3"))
     STAKE = float(os.getenv("STAKE", "1.00"))
     TIMEOUT = int(os.getenv("TIMEOUT", "30"))
+    BETWEEN_BETS_DELAY = float(os.getenv("BETWEEN_BETS_DELAY", "4.0"))

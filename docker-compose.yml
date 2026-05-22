@@ -1,0 +1,18 @@
+services:
+  betnacional-multiplas:
+    image: renaneunao/betnacional-multiplas:latest
+    container_name: betnacional-multiplas
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8002:8002"
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - betnacional-net
+
+networks:
+  betnacional-net:
+    name: betnacional-net
+    external: true

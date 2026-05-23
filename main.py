@@ -1,7 +1,9 @@
+import json
 import logging
 import time
 import random
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import StreamingResponse
 
 from multiplas.client import BetnacionalAPIClient
 from multiplas.engine import MultiplesEngine
@@ -107,6 +109,86 @@ def execute(payload: ExecuteRequest):
         }
     except Exception as e:
         logger.error("Error in /execute: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/execute-stream")
+def execute_stream(payload: ExecuteRequest):
+    try:
+        n_legs = payload.num_legs or Config.NUM_LEGS
+        stake = payload.stake or Config.STAKE
+
+        matches = api_client.get_round_matches()
+        engine = MultiplesEngine(num_legs=n_legs)
+        analysis = engine.analyze(matches, stake=stake)
+
+        if payload.combinations:
+            target_ranks = set(payload.combinations)
+            selected = [c for c in analysis.combinations if c.rank in target_ranks]
+        else:
+            selected = analysis.combinations
+
+        total = len(selected)
+        base_delay = Config.BETWEEN_BETS_DELAY
+
+        def generate():
+            yield f"data: {json.dumps({'event': 'start', 'total': total, 'stake': stake, 'legs': n_legs})}\n\n"
+
+            for i, combo in enumerate(selected):
+                if i > 0:
+                    jitter = random.uniform(-0.3, 0.3) * base_delay
+                    delay = max(1.0, base_delay + jitter)
+                    status_msg = f"Bet {i+1}/{total} em {delay:.1f}s..."
+                    logger.info("Waiting %.1fs before bet %d/%d...", delay, i + 1, total)
+                    yield f"data: {json.dumps({'event': 'waiting', 'next': i+1, 'total': total, 'delay': round(delay, 1), 'rank': combo.rank})}\n\n"
+                    time.sleep(delay)
+
+                choices = [
+                    {"match_id": e["match_id"], "choice": e["choice"]}
+                    for e in combo.entries
+                ]
+                try:
+                    resp = api_client.place_bet(choices, stake)
+                    entry = {
+                        "event": "bet",
+                        "n": i + 1,
+                        "total": total,
+                        "rank": combo.rank,
+                        "total_odd": combo.total_odd,
+                        "combined_prob": combo.combined_prob,
+                        "matches": combo.matches_summary,
+                        "result": resp,
+                    }
+                    logger.info("Bet #%d/%d placed: %s", i + 1, total, resp)
+                except Exception as e:
+                    entry = {
+                        "event": "bet",
+                        "n": i + 1,
+                        "total": total,
+                        "rank": combo.rank,
+                        "matches": combo.matches_summary,
+                        "error": str(e),
+                    }
+                    logger.error("Bet #%d/%d failed: %s", i + 1, total, e)
+
+                yield f"data: {json.dumps(entry)}\n\n"
+
+            try:
+                balance = api_client.get_balance()
+            except Exception:
+                balance = None
+            yield f"data: {json.dumps({'event': 'done', 'total_sent': total, 'balance': balance})}\n\n"
+
+        return StreamingResponse(
+            generate(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+            }
+        )
+    except Exception as e:
+        logger.error("Error in /execute-stream: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
 
 

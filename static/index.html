@@ -430,7 +430,7 @@ async function loadActive(){
       l.innerHTML = '<div class="bg-slate-900 border border-slate-800 rounded-xl p-8 lg:p-10 text-center text-slate-600 text-sm">Nenhuma aposta ativa.</div>';
       return;
     }
-    var html = '<div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 lg:gap-3">';
+    var html = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">';
     d.tickets.forEach(function(t){
       html += '<div class="bg-slate-900 border border-slate-800 rounded-xl p-2.5 lg:p-3 hover:border-slate-700 cursor-pointer fade-in" onclick="openTicket(\''+t.ticket_id+'\')">';
       html += '<div class="flex items-center justify-between mb-1"><span class="font-mono text-[8px] lg:text-[9px] text-slate-500 truncate max-w-[130px] lg:max-w-[160px]">'+t.ticket_id.slice(0,14)+'…</span>';
@@ -490,7 +490,7 @@ async function openTicket(tid){
     html += '<h4 class="text-[10px] lg:text-[11px] font-semibold mb-1.5 lg:mb-2 text-slate-500 uppercase tracking-wider">Seleções</h4><div class="space-y-1 lg:space-y-1.5">';
     (d.selections||[]).forEach(function(s){
       html += '<div class="bg-slate-800 rounded-lg p-2 lg:p-2.5 text-[10px] lg:text-xs"><div class="flex items-center gap-1 lg:gap-1.5">';
-      html += '<span class="w-[90px] lg:w-[120px] text-right flex items-center justify-end gap-1">'+shieldImg(s.home)+'<span class="font-medium truncate">'+s.home+'</span></span>';
+      html += '<span class="w-[90px] lg:w-[120px] text-right flex items-center justify-end gap-1"><span class="font-medium truncate">'+s.home+'</span>'+shieldImg(s.home)+'</span>';
       html += '<span class="text-slate-600 w-6 lg:w-8 text-center flex-shrink-0 text-[9px]">vs</span>';
       html += '<span class="w-[90px] lg:w-[120px] flex items-center gap-1">'+shieldImg(s.away)+'<span class="font-medium truncate">'+s.away+'</span></span>';
       html += '<span class="ml-auto px-1 lg:px-1.5 py-0.5 rounded text-[8px] lg:text-[10px] bg-slate-700 text-slate-300 flex-shrink-0">'+s.outcome_name+'</span></div>';

@@ -8,6 +8,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY multiplas/ ./multiplas/
+COPY static/ ./static/
 COPY main.py .
 
 EXPOSE 8002

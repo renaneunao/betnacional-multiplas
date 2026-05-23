@@ -129,6 +129,7 @@ function showSpinner(id){
 function toggleSidebar(force){
   var panel = document.getElementById('sidebar');
   var overlay = document.getElementById('sidebar-overlay');
+  if(window.innerWidth >= 1024) return;
   if(typeof force === 'boolean'){
     if(force){ panel.classList.remove('open'); overlay.classList.remove('open'); }
     return;
@@ -436,7 +437,7 @@ async function loadActive(){
       html += '<span class="'+(t.cashout_available?'text-violet-400 bg-violet-500/10':'text-blue-400 bg-blue-500/10')+' px-1 lg:px-1.5 py-0.5 rounded text-[8px] lg:text-[9px] flex-shrink-0">'+t.status+(t.cashout_available?' • $':'')+'</span></div>';
       html += '<div class="space-y-0.5 text-[9px] lg:text-[10px] text-slate-400 leading-relaxed">';
       t.selections.forEach(function(s){
-        html += '<div class="flex items-center gap-1"><span class="w-[70px] lg:w-[80px] text-right flex items-center justify-end gap-0.5 truncate">'+shieldImg(s.home)+s.home+'</span>';
+        html += '<div class="flex items-center gap-1"><span class="w-[70px] lg:w-[80px] text-right flex items-center justify-end gap-0.5 truncate">'+s.home+shieldImg(s.home)+'</span>';
         html += '<span class="text-slate-600 text-[7px] lg:text-[9px]">vs</span>';
         html += '<span class="w-[70px] lg:w-[80px] flex items-center gap-0.5 truncate">'+shieldImg(s.away)+s.away+'</span>';
         html += '<span class="ml-auto text-[7px] lg:text-[9px] px-1 py-0.5 rounded bg-slate-800 text-slate-300 flex-shrink-0">'+s.outcome+'</span></div>';

@@ -234,14 +234,30 @@ def settled_bets(limit: int = 50, user: str = Depends(check_auth)):
 def ticket_detail(ticket_id: str, user: str = Depends(check_auth)):
     try:
         raw = api_client._get(f"/bets/details?ticket_id={ticket_id}")
+        if isinstance(raw, dict) and not raw.get("found"):
+            raw2 = api_client._get(f"/bets/history?status=completed&limit=50&date_start={(date.today() - timedelta(days=90)).isoformat()}&date_end={date.today().isoformat()}")
+            bets = raw2.get("bets", [])
+            ticket_bets = [b for b in bets if b.get("ticket_id") == ticket_id]
+            if not ticket_bets:
+                return {"ticket_id": ticket_id, "found": False, "selections": []}
+            header = ticket_bets[0]
+            selections = [{
+                "event_id": b.get("event_id"), "home": b.get("home"), "away": b.get("away"),
+                "market_name": b.get("market_name"), "outcome_name": b.get("outcome_name"),
+                "odd": b.get("odd"), "current_odd": b.get("current_odd"),
+            } for b in ticket_bets]
+            raw = {
+                "ticket_id": ticket_id, "found": True,
+                "stake": float(header.get("header_stake", 0)), "total_odd": float(header.get("total_odd", 0)),
+                "potential_return": float(header.get("header_return", 0)),
+                "status": header.get("bet_status_name"), "cashout_available": False,
+                "created_at": header.get("created_at"), "selections": selections,
+            }
         if isinstance(raw, dict):
             raw["created_at_brt"] = to_brt(raw.get("created_at", ""))
-            if "stake" in raw:
-                raw["stake"] = float(raw["stake"]) if isinstance(raw["stake"], str) else raw["stake"]
-            if "total_odd" in raw:
-                raw["total_odd"] = float(raw["total_odd"]) if isinstance(raw["total_odd"], str) else raw["total_odd"]
-            if "potential_return" in raw:
-                raw["potential_return"] = float(raw["potential_return"]) if isinstance(raw["potential_return"], str) else raw["potential_return"]
+            if "stake" in raw: raw["stake"] = float(raw["stake"]) if isinstance(raw["stake"], str) else raw["stake"]
+            if "total_odd" in raw: raw["total_odd"] = float(raw["total_odd"]) if isinstance(raw["total_odd"], str) else raw["total_odd"]
+            if "potential_return" in raw: raw["potential_return"] = float(raw["potential_return"]) if isinstance(raw["potential_return"], str) else raw["potential_return"]
         return raw
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

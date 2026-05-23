@@ -296,8 +296,20 @@ def get_shields():
             SHIELDS_CACHE = {}
             for cid, club in data.items():
                 name = (club.get("nome_fantasia") or "").strip()
-                if name:
-                    SHIELDS_CACHE[name.lower()] = club.get("escudos", {}).get("30x30", "")
+                shield = club.get("escudos", {}).get("30x30", "")
+                if name and shield:
+                    SHIELDS_CACHE[name.lower()] = shield
+            ALIASES = {
+                "red bull bragantino": "bragantino",
+                "vasco da gama": "vasco",
+                "athletico pr": "athlético-pr",
+                "atlético mg": "atlético-mg",
+                "atletico mg": "atlético-mg",
+                "são paulo": "são paulo",
+            }
+            for alias, target in ALIASES.items():
+                if target in SHIELDS_CACHE and alias not in SHIELDS_CACHE:
+                    SHIELDS_CACHE[alias] = SHIELDS_CACHE[target]
         except Exception:
             SHIELDS_CACHE = {}
     return SHIELDS_CACHE

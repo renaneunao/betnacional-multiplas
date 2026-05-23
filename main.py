@@ -2,11 +2,14 @@ import json
 import logging
 import time
 import random
-from datetime import date, timedelta
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import StreamingResponse, HTMLResponse, FileResponse
+import os
+from datetime import date, timedelta, datetime, timezone, timedelta as td
+from fastapi import FastAPI, HTTPException, Query, Request, Response, Depends
+from fastapi.responses import StreamingResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pathlib import Path
+import secrets
 
 from multiplas.client import BetnacionalAPIClient
 from multiplas.engine import MultiplesEngine
@@ -16,13 +19,41 @@ from multiplas.models import ExecuteRequest, AnalysisResult
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s - %(message)s")
 logger = logging.getLogger("multiplas.api")
 
-app = FastAPI(title="Betnacional Dashboard", version="2.0.0")
+app = FastAPI(title="OddStack Dashboard", version="2.1.0")
 
 api_client = BetnacionalAPIClient()
+security = HTTPBasic()
+
+DASH_USER = os.getenv("DASH_USER", "renaneunao")
+DASH_PASS = os.getenv("DASH_PASS", "!Senhas123")
+BRT = timezone(td(hours=-3))
 
 static_dir = Path(__file__).parent / "static"
 static_dir.mkdir(exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+
+def to_brt(ts_str: str) -> str:
+    if not ts_str:
+        return ""
+    try:
+        for fmt in ["%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S.%f"]:
+            try:
+                dt_utc = datetime.strptime(ts_str.replace("T", " ").split(".")[0].split("+")[0], "%Y-%m-%d %H:%M:%S")
+                dt_brt = dt_utc.replace(tzinfo=timezone.utc).astimezone(BRT)
+                return dt_brt.strftime("%d/%m/%Y %H:%M")
+            except ValueError:
+                continue
+        return ts_str
+    except Exception:
+        return ts_str
+
+
+def check_auth(credentials: HTTPBasicCredentials = Depends(security)):
+    is_ok = secrets.compare_digest(credentials.username, DASH_USER) and secrets.compare_digest(credentials.password, DASH_PASS)
+    if not is_ok:
+        raise HTTPException(status_code=401, detail="Unauthorized", headers={"WWW-Authenticate": "Basic"})
+    return credentials.username
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -30,13 +61,20 @@ def index():
     html_path = static_dir / "index.html"
     if html_path.exists():
         return html_path.read_text(encoding="utf-8")
-    return "<h1>Dashboard not found</h1>"
+    return "<h1>OddStack not found</h1>"
+
+
+@app.get("/api/auth-check")
+def auth_check(user: str = Depends(check_auth)):
+    return {"user": user}
 
 
 @app.get("/analyze", response_model=AnalysisResult)
 def analyze(
     num_legs: int = Query(default=None),
     stake: float = Query(default=None),
+    limit: int = Query(default=100, description="Max combinations to return"),
+    user: str = Depends(check_auth),
 ):
     try:
         n_legs = num_legs or Config.NUM_LEGS
@@ -44,6 +82,8 @@ def analyze(
         matches = api_client.get_round_matches()
         engine = MultiplesEngine(num_legs=n_legs)
         result = engine.analyze(matches, stake=n_stake)
+        if len(result.combinations) > limit:
+            result.combinations = result.combinations[:limit]
         return result
     except Exception as e:
         logger.error("Error in /analyze: %s", e)
@@ -51,14 +91,14 @@ def analyze(
 
 
 @app.post("/execute")
-def execute(payload: ExecuteRequest):
+def execute(payload: ExecuteRequest, user: str = Depends(check_auth)):
     try:
         n_legs = payload.num_legs or Config.NUM_LEGS
         stake = payload.stake or Config.STAKE
         matches = api_client.get_round_matches()
         engine = MultiplesEngine(num_legs=n_legs)
         analysis = engine.analyze(matches, stake=stake)
-        target_ranks = set(payload.combinations) if payload.combinations else set(range(1, len(analysis.combinations) + 1))
+        target_ranks = set(payload.combinations) if payload.combinations else set(range(1, min(len(analysis.combinations), 51)))
         selected = [c for c in analysis.combinations if c.rank in target_ranks]
         results = []
         total = len(selected)
@@ -81,14 +121,14 @@ def execute(payload: ExecuteRequest):
 
 
 @app.post("/execute-stream")
-def execute_stream(payload: ExecuteRequest):
+def execute_stream(payload: ExecuteRequest, user: str = Depends(check_auth)):
     try:
         n_legs = payload.num_legs or Config.NUM_LEGS
         stake = payload.stake or Config.STAKE
         matches = api_client.get_round_matches()
         engine = MultiplesEngine(num_legs=n_legs)
         analysis = engine.analyze(matches, stake=stake)
-        target_ranks = set(payload.combinations) if payload.combinations else set(range(1, len(analysis.combinations) + 1))
+        target_ranks = set(payload.combinations) if payload.combinations else set(range(1, min(len(analysis.combinations), 51)))
         selected = [c for c in analysis.combinations if c.rank in target_ranks]
         total = len(selected)
         base_delay = Config.BETWEEN_BETS_DELAY
@@ -120,19 +160,19 @@ def execute_stream(payload: ExecuteRequest):
 
 
 @app.get("/api/bets/pending")
-def pending_bets(limit: int = 100):
+def pending_bets(limit: int = 100, user: str = Depends(check_auth)):
     try:
-        raw = api_client._get(f"/bets/history?status=pending&limit={limit}&date_start={(date.today() - timedelta(days=30)).isoformat()}&date_end={date.today().isoformat()}")
+        today = date.today()
+        raw = api_client._get(f"/bets/history?status=pending&limit={limit}&date_start={(today - timedelta(days=30)).isoformat()}&date_end={today.isoformat()}")
         bets = raw.get("bets", [])
-        events = {e.get("id") or str(e.get("event_id")): e for e in raw.get("events", [])}
-
         grouped = {}
         for b in bets:
             tid = b.get("ticket_id", "?")
             if tid not in grouped:
                 grouped[tid] = {
                     "ticket_id": tid,
-                    "created_at": b.get("created_at"),
+                    "created_at": to_brt(b.get("created_at")),
+                    "created_at_raw": b.get("created_at"),
                     "status": b.get("bet_status_name"),
                     "stake": float(b.get("header_stake", 0)),
                     "total_odd": float(b.get("total_odd", 0)),
@@ -144,27 +184,25 @@ def pending_bets(limit: int = 100):
                 "home": b.get("home"),
                 "away": b.get("away"),
                 "outcome": b.get("outcome_name"),
-                "odd": b.get("odd"),
-                "current_odd": b.get("current_odd"),
+                "odd": float(b.get("odd", 0)),
                 "event_date": b.get("event_date"),
-                "sr_event_odd_id": b.get("sr_event_odd_id"),
-                "tournament": b.get("tournament_name"),
             })
-
+        tickets = sorted(grouped.values(), key=lambda x: x.get("created_at_raw", ""), reverse=True)
         return {
-            "tickets": sorted(grouped.values(), key=lambda x: x.get("created_at", ""), reverse=True),
-            "total_pending": sum(1 for t in grouped.values()),
-            "total_stake": sum(t["stake"] for t in grouped.values()),
-            "total_cashout_available": sum(1 for t in grouped.values() if t["cashout_available"]),
+            "tickets": tickets,
+            "total_pending": len(tickets),
+            "total_stake": sum(t["stake"] for t in tickets),
+            "total_cashout_available": sum(1 for t in tickets if t["cashout_available"]),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/bets/settled")
-def settled_bets(limit: int = 50):
+def settled_bets(limit: int = 50, user: str = Depends(check_auth)):
     try:
-        raw = api_client._get(f"/bets/history?status=completed&limit={limit}&date_start={(date.today() - timedelta(days=30)).isoformat()}&date_end={date.today().isoformat()}")
+        today = date.today()
+        raw = api_client._get(f"/bets/history?status=completed&limit={limit}&date_start={(today - timedelta(days=30)).isoformat()}&date_end={today.isoformat()}")
         bets = raw.get("bets", [])
         grouped = {}
         for b in bets:
@@ -172,35 +210,45 @@ def settled_bets(limit: int = 50):
             if tid not in grouped:
                 grouped[tid] = {
                     "ticket_id": tid,
-                    "created_at": b.get("created_at"),
+                    "created_at": to_brt(b.get("created_at")),
+                    "created_at_raw": b.get("created_at"),
                     "status": b.get("bet_status_name"),
                     "stake": float(b.get("header_stake", 0)),
                     "total_odd": float(b.get("total_odd", 0)),
-                    "payout": float(b.get("header_return", 0)) if b.get("bet_status_name") == "Ganhou" else 0,
+                    "payout": float(b.get("header_return", 0)) if b.get("bet_status_name") in ("Ganhou", "Ganho") else 0,
                     "selections": [],
                 }
             grouped[tid]["selections"].append({
                 "home": b.get("home"),
                 "away": b.get("away"),
                 "outcome": b.get("outcome_name"),
-                "odd": b.get("odd"),
+                "odd": float(b.get("odd", 0)),
             })
-        return {"tickets": sorted(grouped.values(), key=lambda x: x.get("created_at", ""), reverse=True)}
+        tickets = sorted(grouped.values(), key=lambda x: x.get("created_at_raw", ""), reverse=True)
+        return {"tickets": tickets}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/ticket/{ticket_id}")
-def ticket_detail(ticket_id: str):
+def ticket_detail(ticket_id: str, user: str = Depends(check_auth)):
     try:
         raw = api_client._get(f"/bets/details?ticket_id={ticket_id}")
+        if isinstance(raw, dict):
+            raw["created_at_brt"] = to_brt(raw.get("created_at", ""))
+            if "stake" in raw:
+                raw["stake"] = float(raw["stake"]) if isinstance(raw["stake"], str) else raw["stake"]
+            if "total_odd" in raw:
+                raw["total_odd"] = float(raw["total_odd"]) if isinstance(raw["total_odd"], str) else raw["total_odd"]
+            if "potential_return" in raw:
+                raw["potential_return"] = float(raw["potential_return"]) if isinstance(raw["potential_return"], str) else raw["potential_return"]
         return raw
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/cashout")
-def cashout(ticket_id: str = Query(...), total_cashout: float = Query(0)):
+def cashout(ticket_id: str = Query(...), total_cashout: float = Query(0), user: str = Depends(check_auth)):
     try:
         raw = api_client._post(f"/bets/cashout?ticket_id={ticket_id}&total_cashout={total_cashout}", data={})
         return raw
@@ -209,24 +257,24 @@ def cashout(ticket_id: str = Query(...), total_cashout: float = Query(0)):
 
 
 @app.get("/api/status")
-def status():
+def status(user: str = Depends(check_auth)):
     try:
         balance = api_client.get_balance()
-        return {"balance": balance, "config": {"num_legs": Config.NUM_LEGS, "stake": Config.STAKE, "between_bets_delay": Config.BETWEEN_BETS_DELAY}}
+        return {"balance": float(balance), "config": {"num_legs": Config.NUM_LEGS, "stake": Config.STAKE, "between_bets_delay": Config.BETWEEN_BETS_DELAY}}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/balance/stream")
-def balance_stream():
+def balance_stream(user: str = Depends(check_auth)):
     def generate():
         while True:
             try:
                 balance = api_client.get_balance()
-                yield f"data: {json.dumps({'balance': balance, 'time': time.strftime('%H:%M:%S')})}\n\n"
+                yield f"data: {json.dumps({'balance': float(balance), 'time_brt': datetime.now(BRT).strftime('%H:%M:%S')})}\n\n"
             except Exception:
                 yield f"data: {json.dumps({'balance': None, 'error': True})}\n\n"
-            time.sleep(15)
+            time.sleep(30)
     return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 

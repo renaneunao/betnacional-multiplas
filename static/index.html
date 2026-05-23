@@ -1,449 +1,283 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="dark">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Betnacional Dashboard</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config={darkMode:'class'}</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OddStack</title>
+<script src="https://cdn.tailwindcss.com"></script><script>tailwind.config={darkMode:'class'}</script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-  body { font-family: 'Inter', sans-serif; }
-  .sidebar-item { transition: all 0.15s ease; }
-  .sidebar-item:hover { background: rgba(255,255,255,0.06); }
-  .card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-  .card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.4); }
-  .pulse { animation: pulse 2s infinite; }
-  @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.5 } }
-  .gradient-text { background: linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: #1e293b; }
-  ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+body{font-family:'Inter',sans-serif}
+.sidebar-item{transition:all .15s}.sidebar-item:hover{background:rgba(139,92,246,.08)}
+.active-nav{background:rgba(139,92,246,.15)!important;color:#c4b5fd!important;border-left:3px solid #8b5cf6}
+.card{transition:transform .2s,box-shadow .2s}.card:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(139,92,246,.15)}
+.gradient-text{background:linear-gradient(135deg,#a78bfa,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.btn-primary{background:linear-gradient(135deg,#7c3aed,#6366f1);transition:opacity .2s}.btn-primary:hover{opacity:.9}
+.btn-ghost{border:1px solid #334155;transition:all .15s}.btn-ghost:hover{background:#1e293b;border-color:#475569}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#0f172a}::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.fade-in{animation:fadeIn .3s ease}
+@keyframes spin{to{transform:rotate(360deg)}}.spinner{border:2px solid #1e293b;border-top:2px solid #8b5cf6;width:24px;height:24px;border-radius:50%;animation:spin .6s linear infinite}
+.spinner-sm{width:16px;height:16px}
+.skeleton{background:linear-gradient(90deg,#1e293b 25%,#334155 50%,#1e293b 75%);background-size:200% 100%;animation:shimmer 1.5s infinite}@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.combo-row{cursor:pointer;transition:all .15s}.combo-row:hover{background:#1e293b!important;border-color:#475569!important}
 </style>
 </head>
-<body class="bg-gray-950 text-gray-100 min-h-screen flex">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex">
 
 <!-- SIDEBAR -->
-<aside class="w-64 bg-gray-900 border-r border-gray-800 flex flex-col fixed h-full z-10">
-  <div class="p-6 border-b border-gray-800">
-    <h1 class="text-xl font-bold gradient-text">Betnacional</h1>
-    <p class="text-gray-500 text-xs mt-1">Multiples Engine</p>
+<aside class="w-60 bg-slate-900 border-r border-slate-800 flex flex-col fixed h-full z-20">
+  <div class="p-5 border-b border-slate-800">
+    <div class="flex items-center gap-3"><div class="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div><div><h1 class="text-lg font-bold gradient-text">OddStack</h1><p class="text-slate-500 text-[10px] tracking-wider uppercase">Multiples Engine</p></div></div>
   </div>
-  <nav class="flex-1 p-4 space-y-1">
-    <a href="#" onclick="showSection('dashboard')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:text-white active" id="nav-dashboard">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4"/></svg>
-      Dashboard
-    </a>
-    <a href="#" onclick="showSection('create')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-white" id="nav-create">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-      Criar Lote
-    </a>
-    <a href="#" onclick="showSection('active')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-white" id="nav-active">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-      Ativas <span id="active-count-badge" class="ml-auto bg-blue-600 text-xs px-1.5 py-0.5 rounded-full">0</span>
-    </a>
-    <a href="#" onclick="showSection('history')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-white" id="nav-history">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      Histórico
-    </a>
+  <nav class="flex-1 p-3 space-y-0.5">
+    <a href="#" onclick="navTo('dashboard')" class="sidebar-item flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-slate-400" id="nav-dashboard"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>Dashboard</a>
+    <a href="#" onclick="navTo('create')" class="sidebar-item flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-slate-400" id="nav-create"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Criar Lote</a>
+    <a href="#" onclick="navTo('active')" class="sidebar-item flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-slate-400" id="nav-active"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Ativas <span id="badge-active" class="ml-auto bg-violet-600 text-[10px] px-1.5 py-0.5 rounded-full"></span></a>
+    <a href="#" onclick="navTo('history')" class="sidebar-item flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-slate-400" id="nav-history"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Histórico</a>
   </nav>
-  <div class="p-4 border-t border-gray-800">
-    <div class="flex items-center gap-3">
-      <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xs font-bold">B</div>
-      <div>
-        <p class="text-sm font-medium" id="saldo-display">R$ ---</p>
-        <p class="text-xs text-gray-500" id="saldo-label">Saldo</p>
-      </div>
-    </div>
-  </div>
+  <div class="p-4 border-t border-slate-800"><div class="flex items-center gap-3 opacity-70 hover:opacity-100 transition"><div class="w-2 h-2 rounded-full bg-green-400 shadow-sm shadow-green-400/50" id="dot-live"></div><div><p class="text-sm font-semibold" id="bal-side">R$ ---</p><p class="text-[10px] text-slate-500" id="bal-time"></p></div></div><button onclick="logout()" class="mt-3 w-full text-[11px] text-slate-600 hover:text-slate-400 transition">sair</button></div>
 </aside>
 
 <!-- MAIN -->
-<main class="ml-64 flex-1 p-8">
+<main class="ml-60 flex-1 p-6 lg:p-8">
+
   <!-- DASHBOARD -->
-  <section id="section-dashboard">
-    <h2 class="text-2xl font-bold mb-6">Dashboard</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="dash-cards">
-      <div class="card bg-gray-900 border border-gray-800 rounded-xl p-5">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-gray-400 text-sm">Saldo</span>
-          <span class="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center"><svg class="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a1 1 0 011 1v2a1 1 0 11-2 0V8a1 1 0 011-1z" clip-rule="evenodd"/></svg></span>
-        </div>
-        <p class="text-3xl font-bold" id="card-balance">---</p>
-        <p class="text-xs text-gray-500 mt-1" id="card-balance-time">atualizando...</p>
-      </div>
-      <div class="card bg-gray-900 border border-gray-800 rounded-xl p-5">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-gray-400 text-sm">Ativas</span>
-          <span class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center"><svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></span>
-        </div>
-        <p class="text-3xl font-bold" id="card-active">---</p>
-        <p class="text-xs text-gray-500 mt-1">tickets abertos</p>
-      </div>
-      <div class="card bg-gray-900 border border-gray-800 rounded-xl p-5">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-gray-400 text-sm">Investido</span>
-          <span class="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center"><svg class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg></span>
-        </div>
-        <p class="text-3xl font-bold" id="card-invested">---</p>
-        <p class="text-xs text-gray-500 mt-1">em apostas ativas</p>
-      </div>
-      <div class="card bg-gray-900 border border-gray-800 rounded-xl p-5">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-gray-400 text-sm">Cashout</span>
-          <span class="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center"><svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></span>
-        </div>
-        <p class="text-3xl font-bold" id="card-cashout">---</p>
-        <p class="text-xs text-gray-500 mt-1">com cashout disponível</p>
-      </div>
+  <section id="sec-dashboard">
+    <div class="flex items-center justify-between mb-6"><h2 class="text-xl font-bold">Dashboard</h2><div class="flex gap-2"><input type="date" id="filter-date" onchange="loadDashboard()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-300"><select id="filter-status" onchange="loadDashboard()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-300"><option value="all">Todos</option><option value="Pendente">Pendente</option><option value="Ganhou">Ganhou</option><option value="Perdeu">Perdeu</option></select></div></div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="card bg-slate-900 border border-slate-800 rounded-xl p-5"><p class="text-slate-400 text-xs mb-1">Saldo</p><p class="text-2xl font-bold" id="card-bal">---</p><p class="text-[10px] text-slate-500 mt-1" id="card-bal-t">---</p></div>
+      <div class="card bg-slate-900 border border-slate-800 rounded-xl p-5"><p class="text-slate-400 text-xs mb-1">Ativas</p><p class="text-2xl font-bold" id="card-act">---</p><p class="text-[10px] text-slate-500 mt-1">tickets</p></div>
+      <div class="card bg-slate-900 border border-slate-800 rounded-xl p-5"><p class="text-slate-400 text-xs mb-1">Investido</p><p class="text-2xl font-bold" id="card-inv">---</p><p class="text-[10px] text-slate-500 mt-1">em jogo</p></div>
+      <div class="card bg-slate-900 border border-slate-800 rounded-xl p-5"><p class="text-slate-400 text-xs mb-1">Cashout</p><p class="text-2xl font-bold text-violet-400" id="card-co">---</p><p class="text-[10px] text-slate-500 mt-1">disponível</p></div>
     </div>
-    <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
-      <h3 class="text-lg font-semibold mb-4">Apostas Recentes</h3>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm" id="recent-table">
-          <thead><tr class="text-gray-400 border-b border-gray-800"><th class="text-left py-2 px-3">Ticket</th><th class="text-left py-2 px-3">Status</th><th class="text-right py-2 px-3">Stake</th><th class="text-right py-2 px-3">Odd</th><th class="text-right py-2 px-3">Retorno</th><th class="text-right py-2 px-3">Cashout</th></tr></thead>
-          <tbody id="recent-tbody"></tbody>
-        </table>
-      </div>
-    </div>
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5"><h3 class="font-semibold mb-3 text-sm text-slate-300">Apostas Recentes</h3><div class="overflow-y-auto max-h-96" id="recent-wrap"><table class="w-full text-xs"><thead><tr class="text-slate-500 border-b border-slate-800"><th class="text-left py-2 px-2">Ticket</th><th class="text-left py-2 px-2">Data</th><th class="text-left py-2 px-2">Status</th><th class="text-right py-2 px-2">Stake</th><th class="text-right py-2 px-2">Odd</th><th class="text-right py-2 px-2">Retorno</th></tr></thead><tbody id="recent-tb"><tr><td colspan="6" class="py-8 text-center"><div class="spinner mx-auto"></div></td></tr></tbody></table></div></div>
   </section>
 
-  <!-- CREATE BATCH -->
-  <section id="section-create" class="hidden">
-    <h2 class="text-2xl font-bold mb-6">Criar Novo Lote</h2>
+  <!-- CREATE -->
+  <section id="sec-create" class="hidden">
+    <h2 class="text-xl font-bold mb-6">Criar Novo Lote</h2>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
-        <h3 class="text-lg font-semibold mb-4">Parâmetros</h3>
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm text-gray-400 mb-1">Jogos por múltipla</label>
-            <select id="param-legs" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white">
-              <option value="3">3 (Tripla)</option>
-              <option value="4">4 (Quádrupla)</option>
-              <option value="5">5 (Quíntupla)</option>
-              <option value="10" selected>10 (Completa)</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm text-gray-400 mb-1">Stake por entrada (R$)</label>
-            <input type="number" id="param-stake" value="1.00" step="0.50" min="0.50" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white">
-          </div>
-          <div>
-            <label class="block text-sm text-gray-400 mb-1">Quantas combinações (ranks 1 a N)</label>
-            <input type="number" id="param-count" value="10" min="1" max="500" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white">
-          </div>
-          <div>
-            <label class="block text-sm text-gray-400 mb-1">Delay entre apostas (s)</label>
-            <input type="number" id="param-delay" value="4" min="1" step="0.5" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white">
-          </div>
-          <button onclick="analyzeBatch()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition flex items-center justify-center gap-2" id="btn-analyze">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-            Analisar Combinações
-          </button>
-        </div>
-      </div>
-      <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
-        <h3 class="text-lg font-semibold mb-4">Pré-visualização <span id="preview-info" class="text-sm text-gray-500 font-normal"></span></h3>
-        <div id="preview-container" class="max-h-96 overflow-y-auto space-y-2 text-sm">
-          <p class="text-gray-500">Clique em "Analisar Combinações" para ver o ranking.</p>
-        </div>
-        <button onclick="executeBatch()" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed" id="btn-execute" disabled>
-          Executar Lote
-        </button>
-      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-6"><h3 class="font-semibold mb-4 text-sm">Parâmetros</h3><div class="space-y-3"><div><label class="block text-xs text-slate-400 mb-1">Jogos por múltipla</label><select id="p-legs" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"><option value="3">3 (Tripla)</option><option value="4">4 (Quádrupla)</option><option value="5">5 (Quíntupla)</option><option value="10" selected>10 (Completa)</option></select></div><div><label class="block text-xs text-slate-400 mb-1">Stake (R$)</label><input type="number" id="p-stake" value="1.00" step="0.50" min="0.50" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"></div><div><label class="block text-xs text-slate-400 mb-1">Quantas combinações</label><input type="number" id="p-count" value="10" min="1" max="200" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"></div><button onclick="doAnalyze()" class="btn-primary w-full text-white font-medium py-2.5 rounded-lg text-sm flex items-center justify-center gap-2" id="btn-ana"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Analisar Combinações</button></div></div>
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-6"><h3 class="font-semibold mb-3 text-sm">Top Combinações <span id="prev-info" class="text-slate-500 font-normal text-xs"></span></h3><div id="prev-list" class="max-h-80 overflow-y-auto space-y-1.5 text-xs"><p class="text-slate-600 text-sm py-8 text-center">Clique em Analisar para ver o ranking.</p></div><button onclick="doExecute()" class="btn-primary w-full mt-4 text-white font-medium py-2.5 rounded-lg text-sm disabled:opacity-30 disabled:cursor-not-allowed" id="btn-exec" disabled>Executar Lote</button></div>
     </div>
-    <!-- Progress -->
-    <div id="batch-progress" class="hidden mt-6 bg-gray-900 border border-gray-800 rounded-xl p-5">
-      <h3 class="text-lg font-semibold mb-3">Progresso do Lote</h3>
-      <div class="w-full bg-gray-800 rounded-full h-3 mb-3"><div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all" style="width:0%"></div></div>
-      <p class="text-sm text-gray-400" id="progress-text">0/0</p>
-      <div id="batch-log" class="mt-3 space-y-1 text-xs font-mono max-h-48 overflow-y-auto"></div>
-    </div>
+    <div id="batch-prog" class="hidden mt-6 bg-slate-900 border border-slate-800 rounded-xl p-5 fade-in"><h3 class="font-semibold mb-3 text-sm">Progresso</h3><div class="w-full bg-slate-800 rounded-full h-2 mb-2"><div id="prog-bar" class="bg-gradient-to-r from-violet-500 to-indigo-600 h-2 rounded-full transition-all" style="width:0%"></div></div><p class="text-xs text-slate-400" id="prog-txt">0/0</p><div id="batch-log" class="mt-3 space-y-0.5 text-[11px] font-mono max-h-40 overflow-y-auto"></div></div>
   </section>
 
-  <!-- ACTIVE BETS -->
-  <section id="section-active" class="hidden">
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-bold">Apostas Ativas</h2>
-      <button onclick="loadActiveBets()" class="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-        Atualizar
-      </button>
-    </div>
-    <div id="active-list" class="space-y-3"></div>
+  <!-- ACTIVE -->
+  <section id="sec-active" class="hidden">
+    <div class="flex items-center justify-between mb-6"><h2 class="text-xl font-bold">Apostas Ativas</h2><button onclick="loadActive()" class="text-xs text-violet-400 hover:text-violet-300 flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Atualizar</button></div>
+    <div id="active-list"><div class="py-12 text-center"><div class="spinner mx-auto"></div></div></div>
   </section>
 
   <!-- HISTORY -->
-  <section id="section-history" class="hidden">
-    <h2 class="text-2xl font-bold mb-6">Histórico</h2>
-    <div id="history-list" class="space-y-3"></div>
+  <section id="sec-history" class="hidden">
+    <h2 class="text-xl font-bold mb-6">Histórico</h2>
+    <div id="hist-list"><div class="py-12 text-center"><div class="spinner mx-auto"></div></div></div>
   </section>
 
   <!-- TICKET MODAL -->
-  <div id="ticket-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-    <div class="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto m-4">
-      <div class="sticky top-0 bg-gray-900 border-b border-gray-800 p-5 flex items-center justify-between rounded-t-2xl">
-        <h3 class="text-lg font-bold" id="modal-title">Detalhes do Ticket</h3>
-        <button onclick="closeModal()" class="text-gray-400 hover:text-white text-xl">&times;</button>
-      </div>
-      <div class="p-5" id="modal-content"></div>
-    </div>
-  </div>
+  <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"><div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-xl max-h-[85vh] overflow-y-auto"><div class="sticky top-0 bg-slate-900 border-b border-slate-800 p-4 flex items-center justify-between rounded-t-2xl"><h3 class="font-bold text-sm" id="modal-tit"></h3><button onclick="closeModal()" class="text-slate-500 hover:text-white text-xl">&times;</button></div><div class="p-4" id="modal-body"></div></div></div>
+
+  <!-- COMBO DETAIL MODAL -->
+  <div id="combo-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"><div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg max-h-[80vh] overflow-y-auto"><div class="sticky top-0 bg-slate-900 border-b border-slate-800 p-4 flex items-center justify-between rounded-t-2xl"><h3 class="font-bold text-sm">Detalhes da Combinação</h3><button onclick="closeComboModal()" class="text-slate-500 hover:text-white text-xl">&times;</button></div><div class="p-4" id="combo-modal-body"></div></div></div>
 </main>
 
 <script>
-const API = '';
-const $ = (v) => Number(v) || 0;
-let currentSection = 'dashboard';
-let batchData = null;
-let balanceInterval = null;
+const $ = v => Number(v) || 0;
+let batch = null, balSrc = null, curSec = 'dashboard';
 
-document.addEventListener('DOMContentLoaded', () => {
-  showSection('dashboard');
-  startBalanceStream();
-});
+function showSpinner(id){ const el = document.getElementById(id); if(el) el.innerHTML = '<div class="py-12 text-center"><div class="spinner mx-auto"></div></div>' }
 
-function startBalanceStream() {
-  const es = new EventSource(API + '/api/balance/stream');
-  es.onmessage = (e) => {
+function ensureAuth(){ const c = sessionStorage.getItem('oddstack_auth'); if(!c){ showLogin(); return false } return c }
+function setAuth(u,p){ sessionStorage.setItem('oddstack_auth', btoa(u+':'+p)) }
+function getAuth(){ try{ return atob(sessionStorage.getItem('oddstack_auth')||'') }catch(e){ return '' } }
+
+function showLogin(){
+  document.body.innerHTML = `<div class="min-h-screen bg-slate-950 flex items-center justify-center p-4"><div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 w-full max-w-sm fade-in"><div class="flex items-center gap-3 mb-6"><div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div><h1 class="text-xl font-bold gradient-text">OddStack</h1></div><div class="space-y-3"><input id="login-user" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white" placeholder="usuário"><input id="login-pass" type="password" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white" placeholder="senha"><button onclick="doLogin()" class="btn-primary w-full text-white font-medium py-2.5 rounded-lg text-sm">Entrar</button></div><p id="login-err" class="text-red-400 text-xs mt-3 hidden">Credenciais inválidas.</p></div></div>`;
+  document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin() });
+}
+
+async function doLogin(){
+  const u = document.getElementById('login-user').value, p = document.getElementById('login-pass').value;
+  try{
+    const r = await fetch('/api/auth-check', {headers:{'Authorization':'Basic '+btoa(u+':'+p)}});
+    if(r.ok){ setAuth(u,p); location.reload() } else { document.getElementById('login-err').classList.remove('hidden') }
+  }catch(e){ document.getElementById('login-err').classList.remove('hidden') }
+}
+
+function logout(){ sessionStorage.removeItem('oddstack_auth'); location.reload() }
+
+async function api(path, opts={}){
+  const cred = getAuth(); const [u,p] = cred.split(':');
+  const h = {...opts.headers, 'Authorization':'Basic '+btoa(u+':'+(p||''))};
+  const r = await fetch(path, {...opts, headers:h});
+  if(r.status===401){ sessionStorage.removeItem('oddstack_auth'); showLogin(); throw new Error('auth') }
+  return r;
+}
+
+function startBalStream(){
+  const cred = getAuth(); if(!cred) return;
+  balSrc = new EventSource('/api/balance/stream?'+Date.now());
+  balSrc.onmessage = e => {
     const d = JSON.parse(e.data);
-    if (d.balance !== null && d.balance !== undefined) {
+    if(d.balance!=null){
       const b = $(d.balance).toFixed(2);
-      document.getElementById('saldo-display').textContent = 'R$ ' + b;
-      document.getElementById('card-balance').textContent = 'R$ ' + b;
-      document.getElementById('card-balance-time').textContent = 'atualizado ' + d.time;
+      try{
+        document.getElementById('bal-side').textContent='R$ '+b;
+        document.getElementById('card-bal').textContent='R$ '+b;
+        document.getElementById('card-bal-t').textContent=d.time_brt||'';
+        document.getElementById('bal-time').textContent=d.time_brt||'';
+      }catch(e){}
     }
   };
-  es.onerror = () => { es.close(); setTimeout(startBalanceStream, 5000); };
+  balSrc.onerror = () => { if(balSrc){balSrc.close();balSrc=null} setTimeout(startBalStream,10000) };
 }
 
-function showSection(name) {
-  document.querySelectorAll('section[id^="section-"]').forEach(s => s.classList.add('hidden'));
-  document.getElementById('section-' + name).classList.remove('hidden');
-  document.querySelectorAll('.sidebar-item').forEach(a => a.classList.remove('active', 'text-white'));
-  document.querySelectorAll('.sidebar-item').forEach(a => a.classList.add('text-gray-400'));
-  const nav = document.getElementById('nav-' + name);
-  if (nav) { nav.classList.add('active', 'text-white'); nav.classList.remove('text-gray-400'); }
-  currentSection = name;
-  if (name === 'dashboard') loadDashboard();
-  if (name === 'active') loadActiveBets();
-  if (name === 'history') loadHistory();
+document.addEventListener('visibilitychange', () => {
+  if(document.hidden){ if(balSrc){balSrc.close();balSrc=null} }
+  else { if(!balSrc) startBalStream() }
+});
+
+function navTo(s){
+  document.querySelectorAll('section[id^="sec-"]').forEach(x=>x.classList.add('hidden'));
+  document.getElementById('sec-'+s).classList.remove('hidden');
+  document.querySelectorAll('.sidebar-item').forEach(x=>{x.classList.remove('active-nav');x.classList.add('text-slate-400')});
+  const n = document.getElementById('nav-'+s); if(n){n.classList.add('active-nav');n.classList.remove('text-slate-400')}
+  curSec=s;
+  if(s==='dashboard') loadDashboard();
+  if(s==='active') loadActive();
+  if(s==='history') loadHistory();
 }
 
-async function loadDashboard() {
-  try {
-    const [statusRes, pendingRes] = await Promise.all([
-      fetch(API + '/api/status').then(r => r.json()),
-      fetch(API + '/api/bets/pending').then(r => r.json())
-    ]);
-    document.getElementById('card-balance').textContent = 'R$ ' + ($(statusRes.balance)).toFixed(2);
-    document.getElementById('card-active').textContent = pendingRes.total_pending || 0;
-    document.getElementById('card-invested').textContent = 'R$ ' + ($(pendingRes.total_stake)).toFixed(2);
-    document.getElementById('card-cashout').textContent = pendingRes.total_cashout_available || 0;
-    document.getElementById('active-count-badge').textContent = pendingRes.total_pending || 0;
-    const tbody = document.getElementById('recent-tbody');
-    tbody.innerHTML = (pendingRes.tickets || []).slice(0, 10).map(t =>
-      `<tr class="border-b border-gray-800/50 hover:bg-gray-800/30 cursor-pointer" onclick="openTicket('${t.ticket_id}')">
-        <td class="py-2.5 px-3 font-mono text-xs">${t.ticket_id.slice(0,16)}...</td>
-        <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-xs ${t.status==='Pendente'?'bg-blue-500/20 text-blue-400':t.status==='Ganhou'?'bg-green-500/20 text-green-400':'bg-red-500/20 text-red-400'}">${t.status||'---'}</span></td>
-        <td class="py-2.5 px-3 text-right">R$ ${$(t.stake).toFixed(2)}</td>
-        <td class="py-2.5 px-3 text-right">${$(t.total_odd).toFixed(2)}</td>
-        <td class="py-2.5 px-3 text-right text-green-400">R$ ${$(t.potential_return).toFixed(2)}</td>
-        <td class="py-2.5 px-3 text-right">${t.cashout_available?'<span class="text-purple-400">Sim</span>':'<span class="text-gray-600">---</span>'}</td>
-      </tr>`
-    ).join('');
-  } catch(e) { console.error(e); }
+async function loadDashboard(){
+  showSpinner('recent-tb');
+  try{
+    const [sr, pr] = await Promise.all([api('/api/status').then(r=>r.json()), api('/api/bets/pending').then(r=>r.json())]);
+    document.getElementById('card-bal').textContent='R$ '+($(sr.balance)).toFixed(2);
+    document.getElementById('card-act').textContent=pr.total_pending||0;
+    document.getElementById('card-inv').textContent='R$ '+($(pr.total_stake)).toFixed(2);
+    document.getElementById('card-co').textContent=pr.total_cashout_available||0;
+    document.getElementById('badge-active').textContent=pr.total_pending||0;
+    const fd=document.getElementById('filter-date').value, fs=document.getElementById('filter-status').value;
+    let tickets=pr.tickets||[];
+    if(fd) tickets=tickets.filter(t=>(t.created_at_raw||'').startsWith(fd));
+    if(fs!=='all') tickets=tickets.filter(t=>t.status===fs);
+    document.getElementById('recent-tb').innerHTML=tickets.slice(0,50).map(t=>
+      `<tr class="border-b border-slate-800/50 hover:bg-slate-800/30 cursor-pointer" onclick="openTicket('${t.ticket_id}')"><td class="py-2 px-2 font-mono text-[10px]">${t.ticket_id.slice(0,14)}…</td><td class="py-2 px-2 text-slate-400 text-[10px]">${t.created_at||'---'}</td><td class="py-2 px-2"><span class="px-1.5 py-0.5 rounded text-[10px] ${t.status==='Pendente'?'bg-blue-500/20 text-blue-400':t.status==='Ganhou'?'bg-emerald-500/20 text-emerald-400':'bg-red-500/20 text-red-400'}">${t.status||'---'}</span></td><td class="py-2 px-2 text-right">R$${$(t.stake).toFixed(2)}</td><td class="py-2 px-2 text-right">${$(t.total_odd).toFixed(2)}</td><td class="py-2 px-2 text-right text-emerald-400">R$${$(t.potential_return).toFixed(2)}</td></tr>`
+    ).join('')||'<tr><td colspan="6" class="py-8 text-center text-slate-600 text-xs">Nenhuma aposta encontrada.</td></tr>';
+  }catch(e){console.error(e)}
 }
 
-async function analyzeBatch() {
-  const legs = +document.getElementById('param-legs').value;
-  const stake = +document.getElementById('param-stake').value;
-  const count = +document.getElementById('param-count').value;
-  document.getElementById('btn-analyze').disabled = true;
-  document.getElementById('btn-analyze').innerHTML = 'Analisando...';
-  document.getElementById('btn-execute').disabled = true;
-  try {
-    const r = await fetch(API + '/analyze?num_legs=' + legs + '&stake=' + stake);
-    batchData = await r.json();
-    document.getElementById('preview-info').textContent = batchData.total_combinations + ' combos, R$ ' + (count * stake).toFixed(2) + ' total';
-    const container = document.getElementById('preview-container');
-    container.innerHTML = (batchData.combinations || []).slice(0, count).map(c =>
-      `<div class="bg-gray-800 rounded-lg p-3 flex items-start gap-3">
-        <span class="text-xs font-bold w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0">${c.rank}</span>
-        <div class="flex-1 min-w-0">
-          <p class="text-xs text-gray-300 truncate">${c.matches_summary}</p>
-          <div class="flex gap-3 mt-1 text-xs"><span class="text-blue-400">${(c.combined_prob*100).toFixed(2)}%</span><span class="text-gray-500">Odd ${c.total_odd}</span><span class="text-green-400">R$ ${(stake*c.total_odd).toFixed(2)}</span></div>
-        </div>
+async function doAnalyze(){
+  const legs=+document.getElementById('p-legs').value, stake=+document.getElementById('p-stake').value, count=+document.getElementById('p-count').value;
+  const btn=document.getElementById('btn-ana'); btn.disabled=true; btn.innerHTML='<div class="spinner spinner-sm"></div> Analisando…';
+  document.getElementById('btn-exec').disabled=true;
+  document.getElementById('prev-list').innerHTML='<div class="py-8 text-center"><div class="spinner mx-auto"></div><p class="text-xs text-slate-500 mt-2">Calculando combinações…</p></div>';
+  document.getElementById('prev-info').textContent='';
+  try{
+    const r=await api('/analyze?num_legs='+legs+'&stake='+stake+'&limit='+Math.max(count,100)); batch=await r.json();
+    document.getElementById('prev-info').textContent=batch.total_combinations+' combos • stake total R$'+(count*stake).toFixed(2);
+    document.getElementById('prev-list').innerHTML=(batch.combinations||[]).slice(0,count).map((c,i)=>
+      `<div class="combo-row bg-slate-800 border border-slate-700 rounded-lg p-2.5 flex items-start gap-2" onclick="showComboDetail(${i})">
+        <span class="text-[10px] font-bold w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">${c.rank}</span>
+        <div class="min-w-0 flex-1"><p class="text-[11px] text-slate-300 truncate">${c.matches_summary}</p><div class="flex gap-3 mt-0.5 text-[10px]"><span class="text-violet-400">${(c.combined_prob*100).toFixed(2)}%</span><span class="text-slate-500">Odd ${c.total_odd}</span><span class="text-emerald-400">R$${(stake*c.total_odd).toFixed(2)}</span></div></div>
       </div>`
     ).join('');
-    document.getElementById('btn-execute').disabled = false;
-  } catch(e) { alert('Erro: ' + e.message); }
-  document.getElementById('btn-analyze').disabled = false;
-  document.getElementById('btn-analyze').innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg> Analisar Combinações';
+    document.getElementById('btn-exec').disabled=false;
+  }catch(e){ alert('Erro: '+e.message); document.getElementById('prev-list').innerHTML='<p class="text-red-400 text-sm py-4 text-center">Erro ao analisar.</p>' }
+  btn.disabled=false; btn.innerHTML='<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg> Analisar Combinações';
 }
 
-async function executeBatch() {
-  if (!batchData) return;
-  const legs = +document.getElementById('param-legs').value;
-  const stake = +document.getElementById('param-stake').value;
-  const count = +document.getElementById('param-count').value;
-  const ranks = Array.from({length: count}, (_, i) => i + 1);
-  document.getElementById('btn-execute').disabled = true;
-  document.getElementById('batch-progress').classList.remove('hidden');
-  document.getElementById('batch-log').innerHTML = '';
-  document.getElementById('progress-bar').style.width = '0%';
-  document.getElementById('progress-text').textContent = '0/' + count;
-  try {
-    const r = await fetch(API + '/execute-stream', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({combinations: ranks, stake, num_legs: legs})
-    });
-    const reader = r.body.getReader();
-    const decoder = new TextDecoder();
-    let done = false;
-    while (!done) {
-      const {value, done: d} = await reader.read();
-      done = d;
-      if (value) {
-        const text = decoder.decode(value);
-        const lines = text.split('\n');
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const evt = JSON.parse(line.slice(6));
-            if (evt.event === 'bet') {
-              const log = document.getElementById('batch-log');
-              const pct = (evt.n / evt.total * 100).toFixed(0);
-              document.getElementById('progress-bar').style.width = pct + '%';
-              document.getElementById('progress-text').textContent = evt.n + '/' + evt.total;
-              const cls = evt.result?.success ? 'text-green-400' : 'text-red-400';
-              log.innerHTML += `<p class="${cls}">[${evt.n}/${evt.total}] Rank #${evt.rank}: ${evt.result?.success ? 'OK '+evt.result.bet_id?.slice(-12) : 'FAIL '+evt.error||''}</p>`;
-              log.scrollTop = log.scrollHeight;
-            } else if (evt.event === 'waiting') {
-              document.getElementById('progress-text').textContent = 'Aguardando ' + evt.delay + 's... (' + evt.next + '/' + evt.total + ')';
-            } else if (evt.event === 'done') {
-              document.getElementById('progress-text').textContent = 'Concluído! Saldo: R$ ' + (evt.balance || '---');
-              document.getElementById('btn-execute').disabled = false;
-              loadDashboard();
-            }
-          }
-        }
-      }
-    }
-  } catch(e) {
-    document.getElementById('batch-log').innerHTML += '<p class="text-red-400">Erro: ' + e.message + '</p>';
-    document.getElementById('btn-execute').disabled = false;
-  }
+function showComboDetail(idx){
+  if(!batch||!batch.combinations||!batch.combinations[idx]) return;
+  const c = batch.combinations[idx];
+  document.getElementById('combo-modal').classList.remove('hidden');
+  document.getElementById('combo-modal-body').innerHTML = `
+    <div class="flex items-center gap-2 mb-4"><span class="text-xs font-bold w-6 h-6 rounded-full bg-violet-500/20 text-violet-400 flex items-center justify-center">#${c.rank}</span><span class="text-xs text-slate-400">Prob: <b class="text-violet-400">${(c.combined_prob*100).toFixed(3)}%</b> • Odd Total: <b>${c.total_odd}</b></span></div>
+    <div class="space-y-1.5">${(c.entries||[]).map(e=>`
+      <div class="bg-slate-800 rounded-lg p-2.5 flex justify-between items-center text-xs">
+        <div><span class="font-medium text-slate-200">${e.match}</span><br><span class="text-[10px] text-slate-500">${e.start_time||''}</span></div>
+        <div class="text-right"><span class="px-1.5 py-0.5 rounded text-[10px] ${e.choice==='casa'?'bg-blue-500/20 text-blue-400':e.choice==='empate'?'bg-amber-500/20 text-amber-400':'bg-emerald-500/20 text-emerald-400'}">${e.team}</span><br><span class="text-[10px] text-slate-500">Odd ${e.odd} (${(e.implied_prob*100).toFixed(1)}%)</span></div>
+      </div>`).join('')}</div>
+    <p class="text-[11px] text-slate-400 mt-4 p-3 bg-slate-800/50 rounded-lg">Retorno esperado com R$1,00: <b class="text-emerald-400">R$${c.expected_return.toFixed(2)}</b></p>
+  `;
 }
 
-async function loadActiveBets() {
-  try {
-    const r = await fetch(API + '/api/bets/pending');
-    const data = await r.json();
-    document.getElementById('active-count-badge').textContent = data.total_pending || 0;
-    const list = document.getElementById('active-list');
-    if (!data.tickets || data.tickets.length === 0) {
-      list.innerHTML = '<div class="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center text-gray-500">Nenhuma aposta ativa.</div>';
-      return;
-    }
-    list.innerHTML = data.tickets.map(t => `
-      <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 hover:border-gray-700 transition cursor-pointer" onclick="openTicket('${t.ticket_id}')">
-        <div class="flex items-center justify-between mb-2">
-          <span class="font-mono text-xs text-gray-400">${t.ticket_id}</span>
-          <span class="px-2 py-0.5 rounded text-xs ${t.cashout_available?'bg-purple-500/20 text-purple-400':'bg-blue-500/20 text-blue-400'}">${t.status||'Pendente'}${t.cashout_available?' • Cashout':''}</span>
-        </div>
-        <div class="flex items-center justify-between text-sm">
-          <div class="text-gray-300 truncate max-w-md">${t.selections.map(s=>s.home+' vs '+s.away+' ('+s.outcome+')').join(' • ')}</div>
-          <div class="text-right flex-shrink-0 ml-4">
-            <span class="text-gray-400">R$ ${$(t.stake).toFixed(2)}</span>
-            <span class="text-gray-600 mx-2">→</span>
-            <span class="text-green-400 font-semibold">R$ ${$(t.potential_return).toFixed(2)}</span>
-          </div>
-        </div>
-        <div class="flex gap-4 mt-1 text-xs text-gray-500">
-          <span>Odd: ${$(t.total_odd).toFixed(2)}</span>
-          <span>${t.selections.length} seleções</span>
-          <span>${t.created_at ? new Date(t.created_at).toLocaleDateString('pt-BR') : ''}</span>
-        </div>
-      </div>
-    `).join('');
-  } catch(e) { console.error(e); }
+function closeComboModal(){ document.getElementById('combo-modal').classList.add('hidden') }
+document.addEventListener('click', e => { if(e.target===document.getElementById('combo-modal')) closeComboModal() });
+
+async function doExecute(){
+  if(!batch) return;
+  const legs=+document.getElementById('p-legs').value, stake=+document.getElementById('p-stake').value, count=+document.getElementById('p-count').value;
+  const ranks=Array.from({length:count},(_,i)=>i+1);
+  document.getElementById('btn-exec').disabled=true;
+  document.getElementById('batch-prog').classList.remove('hidden');
+  document.getElementById('batch-log').innerHTML=''; document.getElementById('prog-bar').style.width='0%'; document.getElementById('prog-txt').textContent='0/'+count;
+  try{
+    const r=await fetch('/execute-stream',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Basic '+btoa(getAuth())},body:JSON.stringify({combinations:ranks,stake,num_legs:legs})});
+    if(r.status===401){ showLogin(); return }
+    const reader=r.body.getReader(); const dec=new TextDecoder(); let done=false;
+    while(!done){ const {value,done:d}=await reader.read(); done=d; if(value){ const lines=dec.decode(value).split('\n');
+      for(const l of lines){ if(l.startsWith('data: ')){ const ev=JSON.parse(l.slice(6));
+        if(ev.event==='bet'){
+          document.getElementById('prog-bar').style.width=(ev.n/ev.total*100)+'%'; document.getElementById('prog-txt').textContent=ev.n+'/'+ev.total;
+          const cls=ev.result?.success?'text-emerald-400':'text-red-400';
+          document.getElementById('batch-log').innerHTML+=`<p class="${cls}">[${ev.n}/${ev.total}] #${ev.rank}: ${ev.result?.success?'OK '+ev.result.bet_id?.slice(-12):'FAIL'}</p>`;
+          document.getElementById('batch-log').scrollTop=document.getElementById('batch-log').scrollHeight;
+        }else if(ev.event==='waiting'){ document.getElementById('prog-txt').textContent='Aguardando '+ev.delay+'s... ('+ev.next+'/'+ev.total+')' }
+        else if(ev.event==='done'){ document.getElementById('prog-txt').textContent='Concluído! Saldo: R$'+(ev.balance||'---'); document.getElementById('btn-exec').disabled=false; loadDashboard() }
+      }}
+    }}
+  }catch(e){ document.getElementById('batch-log').innerHTML+='<p class="text-red-400">Erro: '+e.message+'</p>'; document.getElementById('btn-exec').disabled=false }
 }
 
-async function loadHistory() {
-  try {
-    const r = await fetch(API + '/api/bets/settled');
-    const data = await r.json();
-    const list = document.getElementById('history-list');
-    if (!data.tickets || data.tickets.length === 0) {
-      list.innerHTML = '<div class="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center text-gray-500">Nenhuma aposta finalizada.</div>';
-      return;
-    }
-    list.innerHTML = data.tickets.map(t => `
-      <div class="bg-gray-900 border border-gray-800 rounded-xl p-4" onclick="openTicket('${t.ticket_id}')">
-        <div class="flex items-center justify-between mb-2">
-          <span class="font-mono text-xs text-gray-400">${t.ticket_id}</span>
-          <span class="px-2 py-0.5 rounded text-xs ${t.status==='Ganhou'?'bg-green-500/20 text-green-400':'bg-red-500/20 text-red-400'}">${t.status||'---'}</span>
-        </div>
-        <div class="flex items-center justify-between text-sm">
-          <div class="text-gray-300 truncate max-w-md">${t.selections.map(s=>s.home+' vs '+s.away+' ('+s.outcome+')').join(' • ')}</div>
-          <div class="text-right flex-shrink-0 ml-4">
-            <span class="text-gray-400">R$ ${$(t.stake).toFixed(2)}</span>
-            <span class="text-gray-600 mx-2">→</span>
-            <span class="${t.payout>0?'text-green-400':'text-red-400'} font-semibold">R$ ${$(t.payout).toFixed(2)}</span>
-          </div>
-        </div>
-      </div>
-    `).join('');
-  } catch(e) { console.error(e); }
+async function loadActive(){
+  showSpinner('active-list');
+  try{
+    const d=await api('/api/bets/pending').then(r=>r.json());
+    document.getElementById('badge-active').textContent=d.total_pending||0;
+    const l=document.getElementById('active-list');
+    if(!d.tickets||!d.tickets.length){ l.innerHTML='<div class="bg-slate-900 border border-slate-800 rounded-xl p-10 text-center text-slate-600 text-sm">Nenhuma aposta ativa.</div>'; return }
+    l.innerHTML=d.tickets.map(t=>`<div class="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-700 cursor-pointer fade-in" onclick="openTicket('${t.ticket_id}')"><div class="flex items-center justify-between mb-2"><span class="font-mono text-[10px] text-slate-500">${t.ticket_id}</span><span class="${t.cashout_available?'text-violet-400 bg-violet-500/10':'text-blue-400 bg-blue-500/10'} px-2 py-0.5 rounded text-[10px]">${t.status}${t.cashout_available?' • Cashout':''}</span></div><div class="text-xs text-slate-300 truncate">${t.selections.map(s=>s.home+' vs '+s.away+' ('+s.outcome+')').join(' • ')}</div><div class="flex gap-3 mt-1 text-[10px] text-slate-500"><span>Stake R$${$(t.stake).toFixed(2)}</span><span>Odd ${$(t.total_odd).toFixed(2)}</span><span class="text-emerald-400">Retorno R$${$(t.potential_return).toFixed(2)}</span></div></div>`).join('');
+  }catch(e){console.error(e)}
 }
 
-async function openTicket(ticketId) {
-  document.getElementById('ticket-modal').classList.remove('hidden');
-  document.getElementById('modal-title').textContent = 'Ticket ' + ticketId;
-  document.getElementById('modal-content').innerHTML = '<p class="text-gray-400">Carregando...</p>';
-  try {
-    const r = await fetch(API + '/api/ticket/' + ticketId);
-    const d = await r.json();
-    if (!d.found) {
-      document.getElementById('modal-content').innerHTML = '<p class="text-red-400">Ticket não encontrado.</p>';
-      return;
-    }
-    document.getElementById('modal-content').innerHTML = `
-      <div class="grid grid-cols-2 gap-4 mb-4">
-        <div><span class="text-xs text-gray-500">Stake</span><p class="font-semibold">R$ ${($(d.stake)).toFixed(2)}</p></div>
-        <div><span class="text-xs text-gray-500">Odd Total</span><p class="font-semibold">${($(d.total_odd)).toFixed(2)}</p></div>
-        <div><span class="text-xs text-gray-500">Retorno Potencial</span><p class="font-semibold text-green-400">R$ ${($(d.potential_return)).toFixed(2)}</p></div>
-        <div><span class="text-xs text-gray-500">Status</span><p class="font-semibold">${d.status||'---'} ${d.cashout_available?'<span class="text-purple-400 text-xs">(Cashout disponível)</span>':''}</p></div>
-      </div>
-      <h4 class="text-sm font-semibold mb-2 text-gray-400">Seleções</h4>
-      <div class="space-y-2">
-        ${(d.selections||[]).map(s => `
-          <div class="bg-gray-800 rounded-lg p-3 flex justify-between items-center">
-            <div><span class="font-medium">${s.home} vs ${s.away}</span><br><span class="text-xs text-gray-400">${s.outcome_name} • ${s.market_name}</span></div>
-            <div class="text-right"><span class="text-gray-300">@${s.odd}</span><br><span class="text-xs text-gray-500">Atual: @${s.current_odd||s.odd}</span></div>
-          </div>
-        `).join('')}
-      </div>
-      ${d.cashout_available ? `<button onclick="doCashout('${ticketId}', 0)" class="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2.5 rounded-lg transition">Fazer Cashout</button>` : ''}
-    `;
-  } catch(e) {
-    document.getElementById('modal-content').innerHTML = '<p class="text-red-400">Erro: ' + e.message + '</p>';
-  }
+async function loadHistory(){
+  showSpinner('hist-list');
+  try{
+    const d=await api('/api/bets/settled').then(r=>r.json());
+    const l=document.getElementById('hist-list');
+    if(!d.tickets||!d.tickets.length){ l.innerHTML='<div class="bg-slate-900 border border-slate-800 rounded-xl p-10 text-center text-slate-600 text-sm">Nenhuma aposta finalizada.</div>'; return }
+    l.innerHTML=d.tickets.map(t=>`<div class="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-700 cursor-pointer fade-in" onclick="openTicket('${t.ticket_id}')"><div class="flex items-center justify-between mb-2"><span class="font-mono text-[10px] text-slate-500">${t.ticket_id}</span><span class="px-2 py-0.5 rounded text-[10px] ${t.status==='Ganhou'?'bg-emerald-500/20 text-emerald-400':'bg-red-500/20 text-red-400'}">${t.status||'---'}</span></div><div class="text-xs text-slate-300 truncate">${t.selections.map(s=>s.home+' vs '+s.away+' ('+s.outcome+')').join(' • ')}</div><div class="flex gap-3 mt-1 text-[10px] text-slate-500"><span>Stake R$${$(t.stake).toFixed(2)}</span><span>${t.created_at||''}</span><span class="${$(t.payout)>0?'text-emerald-400':'text-red-400'}">Payout R$${$(t.payout).toFixed(2)}</span></div></div>`).join('');
+  }catch(e){console.error(e)}
 }
 
-function closeModal() { document.getElementById('ticket-modal').classList.add('hidden'); }
-document.getElementById('ticket-modal').addEventListener('click', (e) => { if (e.target === document.getElementById('ticket-modal')) closeModal(); });
-
-async function doCashout(ticketId, amount) {
-  if (!confirm('Confirmar cashout do ticket ' + ticketId + '?')) return;
-  try {
-    const r = await fetch(API + '/api/cashout?ticket_id=' + ticketId + '&total_cashout=' + amount, {method: 'POST'});
-    const d = await r.json();
-    if (d.success) { alert('Cashout realizado! Valor: R$ ' + ($(d.cashout_amount)).toFixed(2)); closeModal(); loadDashboard(); loadActiveBets(); }
-    else { alert('Falha: ' + d.message); }
-  } catch(e) { alert('Erro: ' + e.message); }
+async function openTicket(tid){
+  document.getElementById('modal').classList.remove('hidden'); document.getElementById('modal-tit').textContent='Ticket '+tid;
+  document.getElementById('modal-body').innerHTML='<div class="py-8 text-center"><div class="spinner mx-auto"></div></div>';
+  try{
+    const d=await api('/api/ticket/'+tid).then(r=>r.json());
+    if(!d||!d.found){ document.getElementById('modal-body').innerHTML='<p class="text-red-400 text-sm text-center py-4">Ticket não encontrado ou expirado.</p>'; return }
+    document.getElementById('modal-body').innerHTML=`<div class="grid grid-cols-2 gap-3 mb-4 text-xs"><div><span class="text-slate-500">Stake</span><p class="font-semibold">R$${($(d.stake)).toFixed(2)}</p></div><div><span class="text-slate-500">Odd Total</span><p class="font-semibold">${($(d.total_odd)).toFixed(2)}</p></div><div><span class="text-slate-500">Retorno</span><p class="font-semibold text-emerald-400">R$${($(d.potential_return)).toFixed(2)}</p></div><div><span class="text-slate-500">Status</span><p class="font-semibold">${d.status||'---'}${d.cashout_available?' <span class="text-violet-400 text-[10px]">(Cashout)</span>':''}</p></div>${d.cashout_estimate?`<div><span class="text-slate-500">Cashout Est.</span><p class="font-semibold text-violet-400">R$${($(d.cashout_estimate)).toFixed(2)}</p></div>`:''}<div><span class="text-slate-500">Data</span><p class="text-slate-400">${d.created_at_brt||d.created_at||'---'}</p></div></div><h4 class="text-[11px] font-semibold mb-2 text-slate-500 uppercase tracking-wider">Seleções</h4><div class="space-y-1.5">${(d.selections||[]).map(s=>`<div class="bg-slate-800 rounded-lg p-2.5 flex justify-between items-center text-xs"><div><span class="font-medium">${s.home} vs ${s.away}</span><br><span class="text-[10px] text-slate-400">${s.outcome_name} • ${s.market_name}</span></div><div class="text-right"><span class="text-slate-300">@${s.odd}</span><br><span class="text-[10px] text-slate-500">Atual @${s.current_odd||s.odd}</span></div></div>`).join('')}</div>${d.cashout_available?`<button onclick="doCashout('${tid}')" class="btn-primary w-full mt-4 text-white font-medium py-2 rounded-lg text-sm">Fazer Cashout${d.cashout_estimate?' (R$'+($(d.cashout_estimate)).toFixed(2)+')':''}</button>`:''}`;
+  }catch(e){ document.getElementById('modal-body').innerHTML='<p class="text-red-400 text-sm text-center py-4">Erro: '+e.message+'</p>' }
 }
+
+function closeModal(){ document.getElementById('modal').classList.add('hidden') }
+document.addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeModal()});
+
+async function doCashout(tid){
+  if(!confirm('Confirmar cashout de '+tid+'?')) return;
+  try{
+    const d=await api('/api/cashout?ticket_id='+tid+'&total_cashout=0',{method:'POST'}).then(r=>r.json());
+    if(d.success){ alert('Cashout realizado! R$'+($(d.cashout_amount)).toFixed(2)); closeModal(); loadDashboard(); if(curSec==='active')loadActive() }
+    else{ alert('Falha: '+d.message) }
+  }catch(e){ alert('Erro: '+e.message) }
+}
+
+(function init(){
+  if(!ensureAuth()) return;
+  startBalStream();
+  navTo('dashboard');
+})();
 </script>
 </body>
 </html>

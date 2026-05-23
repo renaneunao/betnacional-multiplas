@@ -4,7 +4,7 @@ services:
     container_name: betnacional-multiplas
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8002:8002"
+      - "0.0.0.0:8003:8002"
     env_file:
       - .env
     environment:

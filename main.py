@@ -319,26 +319,41 @@ def get_shields():
 def client_health():
     try:
         import requests as req
-        r = req.get(f"{Config.BETNACIONAL_API_URL}/", timeout=5)
-        ok = r.status_code == 200
-        return {"status": "connected" if ok else "error", "http_code": r.status_code}
+        r = req.get(f"{Config.BETNACIONAL_API_URL}/balance", timeout=5)
+        if r.status_code == 200:
+            data = r.json()
+            if "balance" in data and "detail" not in data:
+                return {"status": "connected", "balance": data.get("balance")}
+        return {"status": "error", "http_code": r.status_code, "detail": str(r.text)[:100]}
     except Exception as e:
         return {"status": "disconnected", "error": str(e)[:100]}
 
 
 @app.get("/api/reconnect")
 def reconnect():
+    import json as _json
     try:
         import requests as req
-        r = req.get(f"{Config.BETNACIONAL_API_URL}/", timeout=5)
-        if r.status_code == 200:
-            return {"reconnected": True, "status": "Client já está online"}
-        return {"reconnected": False, "status": f"HTTP {r.status_code}"}
+        r = req.get(f"{Config.BETNACIONAL_API_URL}/balance", timeout=5)
+        if r.status_code == 200 and "balance" in r.json():
+            return {"reconnected": True, "status": "Cliente já está online"}
+    except Exception:
+        pass
+    try:
+        import http.client
+        sock_path = "/var/run/docker.sock"
+        conn = http.client.HTTPConnection("localhost", timeout=30)
+        conn.sock = None
+        import socket
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect(sock_path)
+        conn.sock = s
+        conn.request("POST", "/v1.47/containers/betnacional-client/restart")
+        resp = conn.getresponse()
+        body = resp.read().decode()
+        conn.close()
+        if resp.status in (200, 204):
+            return {"reconnected": True, "status": "Container betnacional-client reiniciado. Aguarde ~25s para o login."}
+        return {"reconnected": False, "status": f"Docker API respondeu {resp.status}: {body[:100]}"}
     except Exception as e:
-        msg = str(e)[:80]
-        try:
-            import subprocess
-            subprocess.run(["docker", "restart", "betnacional-client"], capture_output=True, timeout=30)
-            return {"reconnected": True, "status": "Container reiniciado. Aguarde 20s para login."}
-        except Exception:
-            return {"reconnected": False, "status": f"Cliente offline: {msg}. Reinicie manualmente."}
+        return {"reconnected": False, "status": f"Não foi possível reiniciar: {str(e)[:100]}"}

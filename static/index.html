@@ -193,6 +193,7 @@
 
 <script>
 const API = '';
+const $ = (v) => Number(v) || 0;
 let currentSection = 'dashboard';
 let batchData = null;
 let balanceInterval = null;
@@ -207,7 +208,7 @@ function startBalanceStream() {
   es.onmessage = (e) => {
     const d = JSON.parse(e.data);
     if (d.balance !== null && d.balance !== undefined) {
-      const b = d.balance.toFixed(2);
+      const b = $(d.balance).toFixed(2);
       document.getElementById('saldo-display').textContent = 'R$ ' + b;
       document.getElementById('card-balance').textContent = 'R$ ' + b;
       document.getElementById('card-balance-time').textContent = 'atualizado ' + d.time;
@@ -235,9 +236,9 @@ async function loadDashboard() {
       fetch(API + '/api/status').then(r => r.json()),
       fetch(API + '/api/bets/pending').then(r => r.json())
     ]);
-    document.getElementById('card-balance').textContent = 'R$ ' + (statusRes.balance || 0).toFixed(2);
+    document.getElementById('card-balance').textContent = 'R$ ' + ($(statusRes.balance)).toFixed(2);
     document.getElementById('card-active').textContent = pendingRes.total_pending || 0;
-    document.getElementById('card-invested').textContent = 'R$ ' + (pendingRes.total_stake || 0).toFixed(2);
+    document.getElementById('card-invested').textContent = 'R$ ' + ($(pendingRes.total_stake)).toFixed(2);
     document.getElementById('card-cashout').textContent = pendingRes.total_cashout_available || 0;
     document.getElementById('active-count-badge').textContent = pendingRes.total_pending || 0;
     const tbody = document.getElementById('recent-tbody');
@@ -245,9 +246,9 @@ async function loadDashboard() {
       `<tr class="border-b border-gray-800/50 hover:bg-gray-800/30 cursor-pointer" onclick="openTicket('${t.ticket_id}')">
         <td class="py-2.5 px-3 font-mono text-xs">${t.ticket_id.slice(0,16)}...</td>
         <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-xs ${t.status==='Pendente'?'bg-blue-500/20 text-blue-400':t.status==='Ganhou'?'bg-green-500/20 text-green-400':'bg-red-500/20 text-red-400'}">${t.status||'---'}</span></td>
-        <td class="py-2.5 px-3 text-right">R$ ${t.stake.toFixed(2)}</td>
-        <td class="py-2.5 px-3 text-right">${t.total_odd.toFixed(2)}</td>
-        <td class="py-2.5 px-3 text-right text-green-400">R$ ${t.potential_return.toFixed(2)}</td>
+        <td class="py-2.5 px-3 text-right">R$ ${$(t.stake).toFixed(2)}</td>
+        <td class="py-2.5 px-3 text-right">${$(t.total_odd).toFixed(2)}</td>
+        <td class="py-2.5 px-3 text-right text-green-400">R$ ${$(t.potential_return).toFixed(2)}</td>
         <td class="py-2.5 px-3 text-right">${t.cashout_available?'<span class="text-purple-400">Sim</span>':'<span class="text-gray-600">---</span>'}</td>
       </tr>`
     ).join('');
@@ -354,13 +355,13 @@ async function loadActiveBets() {
         <div class="flex items-center justify-between text-sm">
           <div class="text-gray-300 truncate max-w-md">${t.selections.map(s=>s.home+' vs '+s.away+' ('+s.outcome+')').join(' • ')}</div>
           <div class="text-right flex-shrink-0 ml-4">
-            <span class="text-gray-400">R$ ${t.stake.toFixed(2)}</span>
+            <span class="text-gray-400">R$ ${$(t.stake).toFixed(2)}</span>
             <span class="text-gray-600 mx-2">→</span>
-            <span class="text-green-400 font-semibold">R$ ${t.potential_return.toFixed(2)}</span>
+            <span class="text-green-400 font-semibold">R$ ${$(t.potential_return).toFixed(2)}</span>
           </div>
         </div>
         <div class="flex gap-4 mt-1 text-xs text-gray-500">
-          <span>Odd: ${t.total_odd.toFixed(2)}</span>
+          <span>Odd: ${$(t.total_odd).toFixed(2)}</span>
           <span>${t.selections.length} seleções</span>
           <span>${t.created_at ? new Date(t.created_at).toLocaleDateString('pt-BR') : ''}</span>
         </div>
@@ -387,9 +388,9 @@ async function loadHistory() {
         <div class="flex items-center justify-between text-sm">
           <div class="text-gray-300 truncate max-w-md">${t.selections.map(s=>s.home+' vs '+s.away+' ('+s.outcome+')').join(' • ')}</div>
           <div class="text-right flex-shrink-0 ml-4">
-            <span class="text-gray-400">R$ ${t.stake.toFixed(2)}</span>
+            <span class="text-gray-400">R$ ${$(t.stake).toFixed(2)}</span>
             <span class="text-gray-600 mx-2">→</span>
-            <span class="${t.payout>0?'text-green-400':'text-red-400'} font-semibold">R$ ${t.payout.toFixed(2)}</span>
+            <span class="${t.payout>0?'text-green-400':'text-red-400'} font-semibold">R$ ${$(t.payout).toFixed(2)}</span>
           </div>
         </div>
       </div>
@@ -410,9 +411,9 @@ async function openTicket(ticketId) {
     }
     document.getElementById('modal-content').innerHTML = `
       <div class="grid grid-cols-2 gap-4 mb-4">
-        <div><span class="text-xs text-gray-500">Stake</span><p class="font-semibold">R$ ${(d.stake||0).toFixed(2)}</p></div>
-        <div><span class="text-xs text-gray-500">Odd Total</span><p class="font-semibold">${(d.total_odd||0).toFixed(2)}</p></div>
-        <div><span class="text-xs text-gray-500">Retorno Potencial</span><p class="font-semibold text-green-400">R$ ${(d.potential_return||0).toFixed(2)}</p></div>
+        <div><span class="text-xs text-gray-500">Stake</span><p class="font-semibold">R$ ${($(d.stake)).toFixed(2)}</p></div>
+        <div><span class="text-xs text-gray-500">Odd Total</span><p class="font-semibold">${($(d.total_odd)).toFixed(2)}</p></div>
+        <div><span class="text-xs text-gray-500">Retorno Potencial</span><p class="font-semibold text-green-400">R$ ${($(d.potential_return)).toFixed(2)}</p></div>
         <div><span class="text-xs text-gray-500">Status</span><p class="font-semibold">${d.status||'---'} ${d.cashout_available?'<span class="text-purple-400 text-xs">(Cashout disponível)</span>':''}</p></div>
       </div>
       <h4 class="text-sm font-semibold mb-2 text-gray-400">Seleções</h4>
@@ -439,7 +440,7 @@ async function doCashout(ticketId, amount) {
   try {
     const r = await fetch(API + '/api/cashout?ticket_id=' + ticketId + '&total_cashout=' + amount, {method: 'POST'});
     const d = await r.json();
-    if (d.success) { alert('Cashout realizado! Valor: R$ ' + (d.cashout_amount||0).toFixed(2)); closeModal(); loadDashboard(); loadActiveBets(); }
+    if (d.success) { alert('Cashout realizado! Valor: R$ ' + ($(d.cashout_amount)).toFixed(2)); closeModal(); loadDashboard(); loadActiveBets(); }
     else { alert('Falha: ' + d.message); }
   } catch(e) { alert('Erro: ' + e.message); }
 }

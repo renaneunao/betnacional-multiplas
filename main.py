@@ -281,3 +281,52 @@ def balance_stream(user: str = Depends(check_auth)):
 @app.get("/health")
 def health():
     return {"status": "healthy"}
+
+
+SHIELDS_CACHE = None
+
+
+@app.get("/api/shields")
+def get_shields():
+    global SHIELDS_CACHE
+    if SHIELDS_CACHE is None:
+        try:
+            import requests as req
+            data = req.get("https://api.cartola.globo.com/clubes", timeout=10).json()
+            SHIELDS_CACHE = {}
+            for cid, club in data.items():
+                name = (club.get("nome_fantasia") or "").strip()
+                if name:
+                    SHIELDS_CACHE[name.lower()] = club.get("escudos", {}).get("30x30", "")
+        except Exception:
+            SHIELDS_CACHE = {}
+    return SHIELDS_CACHE
+
+
+@app.get("/api/client-health")
+def client_health():
+    try:
+        import requests as req
+        r = req.get(f"{Config.BETNACIONAL_API_URL}/", timeout=5)
+        ok = r.status_code == 200
+        return {"status": "connected" if ok else "error", "http_code": r.status_code}
+    except Exception as e:
+        return {"status": "disconnected", "error": str(e)[:100]}
+
+
+@app.get("/api/reconnect")
+def reconnect():
+    try:
+        import requests as req
+        r = req.get(f"{Config.BETNACIONAL_API_URL}/", timeout=5)
+        if r.status_code == 200:
+            return {"reconnected": True, "status": "Client já está online"}
+        return {"reconnected": False, "status": f"HTTP {r.status_code}"}
+    except Exception as e:
+        msg = str(e)[:80]
+        try:
+            import subprocess
+            subprocess.run(["docker", "restart", "betnacional-client"], capture_output=True, timeout=30)
+            return {"reconnected": True, "status": "Container reiniciado. Aguarde 20s para login."}
+        except Exception:
+            return {"reconnected": False, "status": f"Cliente offline: {msg}. Reinicie manualmente."}

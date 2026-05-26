@@ -264,31 +264,35 @@ document.addEventListener('visibilitychange', function(){
 
 async function checkClient(){
   try {
-    var d = await fetch('/api/client-health').then(function(r){ return r.json(); });
+    var r = await fetch('/api/status');
+    if(!r || r.status !== 200){ throw new Error('offline'); }
+    var d = await r.json();
     var dot = document.getElementById('client-dot');
     var dotMob = document.getElementById('client-dot-mob');
     var lbl = document.getElementById('client-label');
     var btn = document.getElementById('btn-side-reconn');
-    if(d.status === 'connected'){
-      dot.style.background = '#4ade80'; if(dotMob) dotMob.style.background = '#4ade80';
-      lbl.textContent = 'conectado';
-      if(btn) btn.textContent = 'reconectar';
-      document.getElementById('reconnect-overlay').classList.add('hidden');
-    } else {
-      if(Date.now() < reconnectCooldown){
-        dot.style.background = '#fbbf24'; if(dotMob) dotMob.style.background = '#fbbf24';
-        lbl.textContent = 'iniciando...';
-        if(btn) btn.textContent = 'aguarde';
-        return;
-      }
-      dot.style.background = '#f87171'; if(dotMob) dotMob.style.background = '#f87171';
-      lbl.textContent = d.status === 'error' ? 'erro' : 'offline';
-      if(btn) btn.textContent = 'reconectar';
-      document.getElementById('reconnect-msg').textContent = 'Sessão expirada ou cliente offline.';
-      document.getElementById('reconnect-detail').textContent = d.detail || d.error || '';
-      document.getElementById('reconnect-overlay').classList.remove('hidden');
+    dot.style.background = '#4ade80'; if(dotMob) dotMob.style.background = '#4ade80';
+    lbl.textContent = 'conectado';
+    if(btn) btn.textContent = 'reconectar';
+    document.getElementById('reconnect-overlay').classList.add('hidden');
+  } catch(e){
+    var dot = document.getElementById('client-dot');
+    var dotMob = document.getElementById('client-dot-mob');
+    var lbl = document.getElementById('client-label');
+    var btn = document.getElementById('btn-side-reconn');
+    if(Date.now() < reconnectCooldown){
+      dot.style.background = '#fbbf24'; if(dotMob) dotMob.style.background = '#fbbf24';
+      lbl.textContent = 'iniciando...';
+      if(btn) btn.textContent = 'aguarde';
+      return;
     }
-  } catch(e){}
+    dot.style.background = '#f87171'; if(dotMob) dotMob.style.background = '#f87171';
+    lbl.textContent = 'offline';
+    if(btn) btn.textContent = 'reconectar';
+    document.getElementById('reconnect-msg').textContent = 'Sessão expirada ou cliente offline.';
+    document.getElementById('reconnect-detail').textContent = 'Clique em Reconectar para reiniciar.';
+    document.getElementById('reconnect-overlay').classList.remove('hidden');
+  }
 }
 
 var reconnectCooldown = 0;
@@ -313,8 +317,8 @@ async function checkAndReconnect(){
       var ival = setInterval(async function(){
         count++;
         try {
-          var h = await fetch('/api/client-health').then(function(r){ return r.json(); });
-          if(h.status === 'connected'){
+          var r = await fetch('/api/status');
+          if(r && r.status === 200){
             clearInterval(ival);
             reconnectCooldown = 0;
             document.getElementById('reconnect-overlay').classList.add('hidden');
@@ -325,7 +329,7 @@ async function checkAndReconnect(){
             if(curSec==='active') loadActive();
             if(curSec==='history') loadHistory();
           } else {
-            document.getElementById('reconnect-detail').textContent = 'Tentativa '+count+'/15: '+h.status;
+            document.getElementById('reconnect-detail').textContent = 'Tentativa '+count+'/15';
           }
         } catch(e){}
         if(count >= 15){

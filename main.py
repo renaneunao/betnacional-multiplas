@@ -447,6 +447,9 @@ def shadow_test(
     except Exception as e:
         logger.error("Shadow test error: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/client-health")
 def client_health():
     try:
         import requests as req

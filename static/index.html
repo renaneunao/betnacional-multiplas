@@ -678,7 +678,7 @@ async function loadShadow(){
 
     html += '<div class="bg-slate-900 border border-slate-800 rounded-xl p-4"><h4 class="font-semibold text-sm mb-3">Resultados por Rodada e Configuração <span class="text-[10px] text-slate-500 font-normal">(clique para ver combos vencedores)</span></h4>';
     html += '<div class="overflow-x-auto -mx-1"><table class="w-full text-[9px] lg:text-[10px]"><thead><tr class="text-slate-500 border-b border-slate-800"><th class="text-left py-1.5 px-1">Rod</th><th class="text-left py-1.5 px-1">Pernas</th><th class="text-left py-1.5 px-1">Empate</th><th class="text-left py-1.5 px-1">Equil.</th><th class="text-right py-1.5 px-1">Venc.</th><th class="text-right py-1.5 px-1">%</th><th class="text-right py-1.5 px-1">Entradas p/ 1</th></tr></thead><tbody>';
-    res.sort(function(a,b){ return b.pct - a.pct; });
+    res.sort(function(a,b){ return a.rodada - b.rodada || b.pct - a.pct; });
     res.forEach(function(r, ri){
       var pctCls = r.pct > 3 ? 'text-emerald-400' : r.pct > 1 ? 'text-yellow-400' : 'text-red-400';
       var rowId = 'sweep-row-'+ri;

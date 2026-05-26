@@ -44,9 +44,7 @@ class CartolaRound:
 
     @classmethod
     def fetch(cls, rodada: int = None) -> "CartolaRound":
-        url = CARTOLA_API
-        if rodada:
-            url = f"{CARTOLA_API}?rodada={rodada}"
+        url = f"{CARTOLA_API}/{rodada}" if rodada else CARTOLA_API
         logger.info("Fetching Cartola round data (rodada=%s)...", rodada or "atual")
         resp = requests.get(url, timeout=15)
         resp.raise_for_status()

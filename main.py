@@ -350,14 +350,14 @@ def shadow_test(
 ):
     try:
         import requests as req
-        cartola_url = f"https://api.cartola.globo.com/partidas?rodada={rodada}"
+        cartola_url = f"https://api.cartola.globo.com/partidas/{rodada}"
         cartola_data = req.get(cartola_url, timeout=15).json()
         partidas = cartola_data.get("partidas", [])
         clubes = cartola_data.get("clubes", {})
 
         results = {}
         for p in partidas:
-            if p.get("valida") and p.get("status_transmissao_tr") == "ENCERRADA":
+            if p.get("valida") and p.get("placar_oficial_mandante") is not None:
                 casa_id = str(p.get("clube_casa_id"))
                 visitante_id = str(p.get("clube_visitante_id"))
                 casa_name = (clubes.get(casa_id, {}) or {}).get("nome_fantasia", "")

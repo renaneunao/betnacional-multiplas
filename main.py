@@ -459,6 +459,122 @@ def shadow_sweep(user: str = Depends(check_auth)):
         return SWEEP_CACHE
 
     import requests as req
+    from itertools import combinations, product
+
+    rounds = list(range(1, 18))
+    legs_list = [3, 4, 5, 10]
+    configs = [
+        {"draw": False, "balanced": False},
+        {"draw": True, "balanced": False},
+        {"draw": False, "balanced": True},
+        {"draw": True, "balanced": True},
+    ]
+    results = []
+    total_tests = len(rounds) * len(legs_list) * len(configs)
+
+    for rodada in rounds:
+        try:
+            cartola = req.get(f"https://api.cartola.globo.com/partidas/{rodada}", timeout=15).json()
+        except Exception:
+            continue
+        clubes = cartola.get("clubes", {})
+        partidas = cartola.get("partidas", [])
+        games = []
+        for p in partidas:
+            if p.get("valida") and p.get("placar_oficial_mandante") is not None:
+                casa_id = str(p.get("clube_casa_id"))
+                visit_id = str(p.get("clube_visitante_id"))
+                casa = (clubes.get(casa_id, {}) or {}).get("nome_fantasia", "")
+                visit = (clubes.get(visit_id, {}) or {}).get("nome_fantasia", "")
+                gols_c = p.get("placar_oficial_mandante") or 0
+                gols_v = p.get("placar_oficial_visitante") or 0
+                if gols_c > gols_v: res = "casa"
+                elif gols_v > gols_c: res = "fora"
+                else: res = "empate"
+                form_casa = p.get("aproveitamento_mandante", [])
+                balanced = False
+                if form_casa:
+                    wins = sum(1 for x in form_casa if x == "v")
+                    balanced = wins <= 2
+                games.append({"casa": casa, "visit": visit, "result": res, "balanced": balanced, "placar": f"{gols_c}x{gols_v}"})
+
+        if len(games) < 6:
+            continue
+
+        for legs in legs_list:
+            if legs > len(games): continue
+            for cfg in configs:
+                total_combos = 0
+                won = 0
+                for match_combo in combinations(games, legs):
+                    if cfg["balanced"]:
+                        if any(not g["balanced"] for g in match_combo):
+                            continue
+                    outcome_lists = [[(g, r) for r in ["casa", "empate", "fora"]] for g in match_combo]
+                    for outcome_combo in product(*outcome_lists):
+                        if cfg["draw"]:
+                            if not any(o[1] == "empate" for o in outcome_combo):
+                                continue
+                        total_combos += 1
+                        if total_combos > 500:
+                            break
+                        if all(o[0]["result"] == o[1] for o in outcome_combo):
+                            won += 1
+                    if total_combos > 500:
+                        break
+
+                pct = round(won / max(1, total_combos) * 100, 2)
+                results.append({
+                    "rodada": rodada, "legs": legs,
+                    "draw": cfg["draw"], "balanced": cfg["balanced"],
+                    "games": len(games), "combos": total_combos,
+                    "won": won, "pct": pct,
+                    "entradas_para_1_acerto": max(1, round(total_combos / max(1, won))) if won > 0 else None,
+                })
+
+    if not results:
+        return {"error": "Nenhum resultado gerado."}
+
+    best = max(results, key=lambda r: (r["pct"], -(r.get("entradas_para_1_acerto") or 99999)))
+
+    by_legs = {}
+    for r in results:
+        k = str(r["legs"])
+        if k not in by_legs: by_legs[k] = {"pcts": [], "entradas": []}
+        by_legs[k]["pcts"].append(r["pct"])
+        if r.get("entradas_para_1_acerto"):
+            by_legs[k]["entradas"].append(r["entradas_para_1_acerto"])
+
+    by_draw = {"with": [], "without": []}
+    by_balanced = {"with": [], "without": []}
+    for r in results:
+        (by_draw["with"] if r["draw"] else by_draw["without"]).append(r["pct"])
+        (by_balanced["with"] if r["balanced"] else by_balanced["without"]).append(r["pct"])
+
+    avg = lambda lst: round(sum(lst) / len(lst), 2) if lst else 0
+
+    insights = {
+        "best_config": best,
+        "best_desc": f"{best['legs']} pernas, " +
+                     ("com empate, " if best['draw'] else "sem empate, ") +
+                     ("sem equilibrados" if best['balanced'] else "todos os jogos"),
+        "by_legs": {k: {"avg_pct": avg(v["pcts"]), "avg_entradas": avg(v["entradas"])} for k, v in by_legs.items()},
+        "draw_impact": {"with_avg": avg(by_draw["with"]), "without_avg": avg(by_draw["without"])},
+        "balanced_impact": {"with_avg": avg(by_balanced["with"]), "without_avg": avg(by_balanced["without"])},
+        "total_tests": total_tests,
+        "tests_run": len(results),
+        "recommendation": (
+            f"Use {best['legs']} pernas, " +
+            ("exija pelo menos 1 empate, " if best['draw'] else "não exija empates, ") +
+            ("remova jogos equilibrados. " if best['balanced'] else "mantenha todos os jogos. ") +
+            f"Com essa config, ~{best.get('entradas_para_1_acerto') or '?'} entradas para 1 acerto ({best['pct']}% taxa)."
+        ),
+    }
+
+    SWEEP_CACHE = {"insights": insights, "results": results, "_ts": time.time()}
+    return SWEEP_CACHE
+
+    import requests as req
     rounds = list(range(13, 18))
     legs_list = [3, 4, 5, 10]
     configs = [

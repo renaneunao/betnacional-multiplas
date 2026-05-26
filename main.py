@@ -449,7 +449,138 @@ def shadow_test(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/client-health")
+SWEEP_CACHE = None
+
+
+@app.get("/api/shadow-sweep")
+def shadow_sweep(user: str = Depends(check_auth)):
+    global SWEEP_CACHE
+    if SWEEP_CACHE is not None and SWEEP_CACHE.get("_ts", 0) > time.time() - 3600:
+        return SWEEP_CACHE
+
+    import requests as req
+    rounds = list(range(1, 18))
+    legs_list = [3, 4, 5, 10]
+    configs = [
+        {"draw": False, "balanced": False},
+        {"draw": True, "balanced": False},
+        {"draw": False, "balanced": True},
+        {"draw": True, "balanced": True},
+    ]
+    max_combos = 100
+    results = []
+    total_tests = len(rounds) * len(legs_list) * len(configs)
+    done = 0
+
+    for rodada in rounds:
+        try:
+            cartola_url = f"https://api.cartola.globo.com/partidas/{rodada}"
+            cartola_data = req.get(cartola_url, timeout=15).json()
+        except Exception:
+            continue
+        clubes = cartola_data.get("clubes", {})
+        partidas = cartola_data.get("partidas", [])
+        match_results = {}
+        for p in partidas:
+            if p.get("valida") and p.get("placar_oficial_mandante") is not None:
+                casa_id = str(p.get("clube_casa_id"))
+                visitante_id = str(p.get("clube_visitante_id"))
+                casa_name = (clubes.get(casa_id, {}) or {}).get("nome_fantasia", "")
+                visitante_name = (clubes.get(visitante_id, {}) or {}).get("nome_fantasia", "")
+                gols_casa = p.get("placar_oficial_mandante") or 0
+                gols_visitante = p.get("placar_oficial_visitante") or 0
+                if gols_casa > gols_visitante: resultado = "casa"
+                elif gols_casa < gols_visitante: resultado = "fora"
+                else: resultado = "empate"
+                match_results[f"{casa_name}||{visitante_name}"] = resultado
+
+        if len(match_results) < 4:
+            continue
+
+        matches = api_client.get_matches()
+
+        for legs in legs_list:
+            for cfg in configs:
+                done += 1
+                try:
+                    engine = MultiplesEngine(num_legs=legs)
+                    analysis = engine.analyze(
+                        matches, stake=1.0, require_draw=cfg["draw"],
+                        min_favorite_odd=1.85 if cfg["balanced"] else None,
+                    )
+                    won = 0
+                    for combo in analysis.combinations[:max_combos]:
+                        correct = True
+                        for e in combo.entries:
+                            found_match = False
+                            for rkey, rresult in match_results.items():
+                                cartola_casa = cartola_to_betnacional_name(rkey.split("||")[0])
+                                cartola_visit = cartola_to_betnacional_name(rkey.split("||")[1])
+                                e_casa = e["match"].split(" vs ")[0]
+                                e_visit = e["match"].split(" vs ")[1] if " vs " in e["match"] else ""
+                                if (cartola_casa in e["match"] or e_casa in cartola_casa) and \
+                                   (cartola_visit in e["match"] or e_visit in cartola_visit):
+                                    found_match = True
+                                    if e["choice"] != rresult:
+                                        correct = False
+                                    break
+                            if not found_match:
+                                correct = False
+                        if correct:
+                            won += 1
+                    pct = round(won / max(1, min(len(analysis.combinations), max_combos)) * 100, 2)
+                    results.append({
+                        "rodada": rodada, "legs": legs,
+                        "draw": cfg["draw"], "balanced": cfg["balanced"],
+                        "combos": min(len(analysis.combinations), max_combos),
+                        "won": won, "pct": pct,
+                    })
+                except Exception:
+                    pass
+
+    if not results:
+        return {"error": "Nenhum resultado gerado."}
+
+    best = max(results, key=lambda r: r["pct"])
+    by_legs = {}
+    for r in results:
+        key = str(r["legs"])
+        if key not in by_legs:
+            by_legs[key] = {"total": 0, "won": 0, "count": 0}
+        by_legs[key]["total"] += 1
+        by_legs[key]["won"] += r["won"]
+        by_legs[key]["count"] += 1
+
+    by_draw = {"with": [], "without": []}
+    by_balanced = {"with": [], "without": []}
+    for r in results:
+        if r["draw"]: by_draw["with"].append(r["pct"])
+        else: by_draw["without"].append(r["pct"])
+        if r["balanced"]: by_balanced["with"].append(r["pct"])
+        else: by_balanced["without"].append(r["pct"])
+
+    avg = lambda lst: round(sum(lst) / len(lst), 2) if lst else 0
+
+    insights = {
+        "best_config": best,
+        "best_desc": f"{best['legs']} pernas, " +
+                     ("com empate, " if best['draw'] else "sem empate, ") +
+                     ("sem equilibrados" if best['balanced'] else "todos os jogos"),
+        "by_legs": {k: {"avg_pct": round(v["won"] / max(1, v["total"] * max_combos) * 100, 2)} for k, v in by_legs.items()},
+        "draw_impact": {"with_avg": avg(by_draw["with"]), "without_avg": avg(by_draw["without"])},
+        "balanced_impact": {"with_avg": avg(by_balanced["with"]), "without_avg": avg(by_balanced["without"])},
+        "total_tests": total_tests,
+        "tests_run": len(results),
+        "recommendation": (
+            f"Use {best['legs']} pernas, " +
+            ("exija pelo menos 1 empate, " if best["draw"] else "não exija empates, ") +
+            ("remova jogos equilibrados. " if best["balanced"] else "mantenha todos os jogos. ") +
+            f"Taxa de acerto com essa config: {best['pct']}% em {best['combos']} combos."
+        ),
+    }
+
+    SWEEP_CACHE = {"insights": insights, "results": results, "_ts": time.time()}
+    return SWEEP_CACHE
 def client_health():
     try:
         import requests as req

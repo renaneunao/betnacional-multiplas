@@ -43,9 +43,12 @@ class CartolaRound:
                 })
 
     @classmethod
-    def fetch(cls) -> "CartolaRound":
-        logger.info("Fetching Cartola round data...")
-        resp = requests.get(CARTOLA_API, timeout=15)
+    def fetch(cls, rodada: int = None) -> "CartolaRound":
+        url = CARTOLA_API
+        if rodada:
+            url = f"{CARTOLA_API}?rodada={rodada}"
+        logger.info("Fetching Cartola round data (rodada=%s)...", rodada or "atual")
+        resp = requests.get(url, timeout=15)
         resp.raise_for_status()
         data = resp.json()
         round_num = data.get("rodada", "?")

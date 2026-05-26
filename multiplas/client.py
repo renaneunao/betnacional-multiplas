@@ -82,8 +82,8 @@ class BetnacionalAPIClient:
                 result.append(parsed)
         return result
 
-    def get_round_matches(self) -> List[MatchOdds]:
-        cartola = CartolaRound.fetch()
+    def get_round_matches(self, rodada: int = None) -> List[MatchOdds]:
+        cartola = CartolaRound.fetch(rodada=rodada)
         raw_matches = self.get_matches_raw()
 
         result = []

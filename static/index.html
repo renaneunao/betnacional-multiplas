@@ -74,7 +74,7 @@ body{font-family:'Inter',sans-serif}
 <section id="sec-create" class="hidden">
   <h2 class="text-lg lg:text-xl font-bold mb-4 lg:mb-6">Criar Novo Lote</h2>
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 lg:p-6"><h3 class="font-semibold mb-3 lg:mb-4 text-sm">Parâmetros</h3><div class="space-y-3"><div><label class="block text-xs text-slate-400 mb-1">Jogos por múltipla</label><select id="p-legs" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"><option value="3">3 (Tripla)</option><option value="4">4 (Quádrupla)</option><option value="5">5 (Quíntupla)</option><option value="10" selected>10 (Completa)</option></select></div><div><label class="block text-xs text-slate-400 mb-1">Stake (R$)</label><input type="number" id="p-stake" value="1.00" step="0.50" min="0.50" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"></div><div><label class="block text-xs text-slate-400 mb-1">Quantas combinações</label><input type="number" id="p-count" value="10" min="1" max="200" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"></div>
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 lg:p-6"><h3 class="font-semibold mb-3 lg:mb-4 text-sm">Parâmetros</h3><div class="space-y-3"><div><label class="block text-xs text-slate-400 mb-1">Rodada</label><select id="p-rodada" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"></select></div><div><label class="block text-xs text-slate-400 mb-1">Jogos por múltipla</label><select id="p-legs" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"><option value="3">3 (Tripla)</option><option value="4">4 (Quádrupla)</option><option value="5">5 (Quíntupla)</option><option value="10" selected>10 (Completa)</option></select></div><div><label class="block text-xs text-slate-400 mb-1">Stake (R$)</label><input type="number" id="p-stake" value="1.00" step="0.50" min="0.50" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"></div><div><label class="block text-xs text-slate-400 mb-1">Quantas combinações</label><input type="number" id="p-count" value="10" min="1" max="200" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"></div>
       <div class="border-t border-slate-800 pt-3 space-y-2.5">
         <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="p-draw" class="rounded bg-slate-700 border-slate-600 text-violet-600 focus:ring-violet-500" checked><span class="text-xs text-slate-300">Apenas com pelo menos 1 empate</span></label>
         <div class="flex items-center gap-2"><input type="number" id="p-maxodd" value="2.0" step="0.1" min="1.1" class="w-20 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white"><span class="text-xs text-slate-400">Odds abaixo de</span></div>
@@ -362,6 +362,8 @@ async function doAnalyze(){
   document.getElementById('prev-info').textContent = '';
   try {
     var params = 'num_legs='+legs+'&stake='+stake+'&limit='+Math.max(count,100);
+    var rodada = document.getElementById('p-rodada').value;
+    if(rodada) params += '&rodada='+rodada;
     if(draw) params += '&require_draw=true';
     if(maxOdd) params += '&max_odd='+maxOdd;
     if(mixed) params += '&mixed='+count;
@@ -578,16 +580,22 @@ window.doLogin = doLogin;
 window.logout = logout;
 
 async function init(){
+  buildRoundDropdown();
   if(!ensureAuth()){ showLogin(); return; }
   await loadShields();
   var sidebar = document.getElementById('sidebar');
   sidebar.style.display = '';
   if(window.innerWidth >= 1024){ sidebar.classList.add('open'); }
-
   startBalStream();
   checkClient();
   setInterval(checkClient, 120000);
   navTo('dashboard');
+}
+
+function buildRoundDropdown(){
+  var sel = document.getElementById('p-rodada');
+  if(!sel) return;
+  for(var i=1; i<=38; i++){ sel.innerHTML += '<option value="'+i+'"'+(i===18?' selected':'')+'>Rodada '+i+'</option>'; }
 }
 
 init();

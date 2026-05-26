@@ -77,19 +77,15 @@ def analyze(
     require_draw: bool = Query(default=False, description="Only combos with at least one draw"),
     max_odd: float = Query(default=None, description="Filter outcomes with odd > this value"),
     mixed: int = Query(default=None, description="Select N diverse combos across probability tiers"),
+    rodada: int = Query(default=None, description="Cartola round number"),
     user: str = Depends(check_auth),
 ):
     try:
         n_legs = num_legs or Config.NUM_LEGS
         n_stake = stake or Config.STAKE
-        matches = api_client.get_round_matches()
+        matches = api_client.get_round_matches(rodada=rodada)
         engine = MultiplesEngine(num_legs=n_legs)
-        result = engine.analyze(
-            matches, stake=n_stake,
-            require_draw=require_draw,
-            max_odd=max_odd,
-            mixed_count=mixed,
-        )
+        result = engine.analyze(matches, stake=n_stake, require_draw=require_draw, max_odd=max_odd, mixed_count=mixed)
         if len(result.combinations) > limit:
             result.combinations = result.combinations[:limit]
         return result

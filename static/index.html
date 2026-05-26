@@ -74,7 +74,13 @@ body{font-family:'Inter',sans-serif}
 <section id="sec-create" class="hidden">
   <h2 class="text-lg lg:text-xl font-bold mb-4 lg:mb-6">Criar Novo Lote</h2>
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 lg:p-6"><h3 class="font-semibold mb-3 lg:mb-4 text-sm">Parâmetros</h3><div class="space-y-3"><div><label class="block text-xs text-slate-400 mb-1">Jogos por múltipla</label><select id="p-legs" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"><option value="3">3 (Tripla)</option><option value="4">4 (Quádrupla)</option><option value="5">5 (Quíntupla)</option><option value="10" selected>10 (Completa)</option></select></div><div><label class="block text-xs text-slate-400 mb-1">Stake (R$)</label><input type="number" id="p-stake" value="1.00" step="0.50" min="0.50" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"></div><div><label class="block text-xs text-slate-400 mb-1">Quantas combinações</label><input type="number" id="p-count" value="10" min="1" max="200" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"></div><button onclick="doAnalyze()" class="btn-primary w-full text-white font-medium py-2.5 rounded-lg text-sm flex items-center justify-center gap-2" id="btn-ana"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Analisar</button></div></div>
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 lg:p-6"><h3 class="font-semibold mb-3 lg:mb-4 text-sm">Parâmetros</h3><div class="space-y-3"><div><label class="block text-xs text-slate-400 mb-1">Jogos por múltipla</label><select id="p-legs" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"><option value="3">3 (Tripla)</option><option value="4">4 (Quádrupla)</option><option value="5">5 (Quíntupla)</option><option value="10" selected>10 (Completa)</option></select></div><div><label class="block text-xs text-slate-400 mb-1">Stake (R$)</label><input type="number" id="p-stake" value="1.00" step="0.50" min="0.50" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"></div><div><label class="block text-xs text-slate-400 mb-1">Quantas combinações</label><input type="number" id="p-count" value="10" min="1" max="200" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"></div>
+      <div class="border-t border-slate-800 pt-3 space-y-2.5">
+        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="p-draw" class="rounded bg-slate-700 border-slate-600 text-violet-600 focus:ring-violet-500"><span class="text-xs text-slate-300">Apenas com pelo menos 1 empate</span></label>
+        <div class="flex items-center gap-2"><input type="number" id="p-maxodd" value="" step="0.1" min="1.1" placeholder="ex: 2.0" class="w-20 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white"><span class="text-xs text-slate-400">Odds abaixo de</span></div>
+        <label class="flex items-center gap-2 cursor-pointer" id="lbl-mixed"><input type="checkbox" id="p-mixed" class="rounded bg-slate-700 border-slate-600 text-violet-600 focus:ring-violet-500"><span class="text-xs text-slate-300">Lote Misto</span><span class="text-[10px] text-slate-500 cursor-help" title="Distribui as apostas proporcionalmente entre tiers de probabilidade. Evita que todas concentrem nos mesmos favoritos. Ex: se todas as top 50 apostam no São Paulo e ele perde, você perde tudo. O lote misto pega algumas do topo, algumas do meio e algumas da base, diversificando os resultados.">&#9432;</span></label>
+      </div>
+      <button onclick="doAnalyze()" class="btn-primary w-full text-white font-medium py-2.5 rounded-lg text-sm flex items-center justify-center gap-2" id="btn-ana"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Analisar</button></div></div>
     <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 lg:p-6"><h3 class="font-semibold mb-3 text-sm">Top Combinações <span id="prev-info" class="text-slate-500 font-normal text-xs"></span></h3><div id="prev-list" class="max-h-64 lg:max-h-80 overflow-y-auto space-y-1.5 text-xs"><p class="text-slate-600 text-sm py-8 text-center">Clique em Analisar.</p></div><button onclick="doExecute()" class="btn-primary w-full mt-3 lg:mt-4 text-white font-medium py-2.5 rounded-lg text-sm disabled:opacity-30 disabled:cursor-not-allowed" id="btn-exec" disabled>Executar Lote</button></div>
   </div>
   <div id="batch-prog" class="hidden mt-4 lg:mt-6 bg-slate-900 border border-slate-800 rounded-xl p-4 lg:p-5 fade-in"><h3 class="font-semibold mb-3 text-sm">Progresso</h3><div class="w-full bg-slate-800 rounded-full h-2 mb-2"><div id="prog-bar" class="bg-gradient-to-r from-violet-500 to-indigo-600 h-2 rounded-full transition-all" style="width:0%"></div></div><p class="text-xs text-slate-400" id="prog-txt">0/0</p><div id="batch-log" class="mt-3 space-y-0.5 text-[10px] lg:text-[11px] font-mono max-h-32 lg:max-h-40 overflow-y-auto"></div></div>
@@ -320,6 +326,9 @@ async function doAnalyze(){
   var legs = +document.getElementById('p-legs').value;
   var stake = +document.getElementById('p-stake').value;
   var count = +document.getElementById('p-count').value;
+  var draw = document.getElementById('p-draw').checked;
+  var maxOdd = document.getElementById('p-maxodd').value;
+  var mixed = document.getElementById('p-mixed').checked;
   var btn = document.getElementById('btn-ana');
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner spinner-sm"></div> Analisando…';
@@ -327,7 +336,11 @@ async function doAnalyze(){
   document.getElementById('prev-list').innerHTML = '<div class="py-8 text-center"><div class="spinner mx-auto"></div><p class="text-xs text-slate-500 mt-2">Calculando combinações…</p></div>';
   document.getElementById('prev-info').textContent = '';
   try {
-    var r = await api('/analyze?num_legs='+legs+'&stake='+stake+'&limit='+Math.max(count,100));
+    var params = 'num_legs='+legs+'&stake='+stake+'&limit='+Math.max(count,100);
+    if(draw) params += '&require_draw=true';
+    if(maxOdd) params += '&max_odd='+maxOdd;
+    if(mixed) params += '&mixed='+count;
+    var r = await api('/analyze?'+params);
     batch = await r.json();
     document.getElementById('prev-info').textContent = batch.total_combinations+' combos • stake total R$'+(count*stake).toFixed(2);
     var html = '';

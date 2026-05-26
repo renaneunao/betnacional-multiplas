@@ -506,6 +506,7 @@ def shadow_sweep(user: str = Depends(check_auth)):
             for cfg in configs:
                 total_combos = 0
                 won = 0
+                winning_examples = []
                 for match_combo in combinations(games, legs):
                     if cfg["balanced"]:
                         if any(not g["balanced"] for g in match_combo):
@@ -520,6 +521,10 @@ def shadow_sweep(user: str = Depends(check_auth)):
                             break
                         if all(o[0]["result"] == o[1] for o in outcome_combo):
                             won += 1
+                            if len(winning_examples) < 3:
+                                winning_examples.append({
+                                    "picks": [{"casa": o[0]["casa"], "visit": o[0]["visit"], "pick": o[1], "result": o[0]["result"], "placar": o[0]["placar"]} for o in outcome_combo]
+                                })
                     if total_combos > 500:
                         break
 
@@ -530,6 +535,7 @@ def shadow_sweep(user: str = Depends(check_auth)):
                     "games": len(games), "combos": total_combos,
                     "won": won, "pct": pct,
                     "entradas_para_1_acerto": max(1, round(total_combos / max(1, won))) if won > 0 else None,
+                    "winning_examples": winning_examples,
                 })
 
     if not results:

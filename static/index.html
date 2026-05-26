@@ -614,6 +614,11 @@ window.logout = logout;
 window.runShadow = runShadow;
 window.loadShadow = loadShadow;
 
+function toggleSweepDetail(id){
+  var row = document.getElementById(id);
+  if(row) row.classList.toggle('hidden');
+}
+
 async function init(){
   buildRoundDropdown();
   if(!ensureAuth()){ showLogin(); return; }
@@ -670,12 +675,25 @@ async function loadShadow(){
     html += '<div><span class="text-[10px] text-slate-400">Remover equilibrados</span><div class="flex gap-2 mt-1 text-[10px]"><span class="bg-slate-800 rounded px-2 py-1">Com: <b class="text-emerald-400">'+bi.with_avg+'%</b></span><span class="bg-slate-800 rounded px-2 py-1">Sem: <b class="text-slate-300">'+bi.without_avg+'%</b></span><span class="text-slate-500">'+ (bi.with_avg > bi.without_avg ? '✓ melhora' : '✗ piora') +'</span></div></div>';
     html += '</div></div>';
 
-    html += '<div class="bg-slate-900 border border-slate-800 rounded-xl p-4"><h4 class="font-semibold text-sm mb-3">Resultados por Rodada e Configuração</h4>';
-    html += '<div class="overflow-x-auto -mx-1"><table class="w-full text-[9px] lg:text-[10px]"><thead><tr class="text-slate-500 border-b border-slate-800"><th class="text-left py-1.5 px-1">Rod</th><th class="text-left py-1.5 px-1">Pernas</th><th class="text-left py-1.5 px-1">Empate</th><th class="text-left py-1.5 px-1">Equil.</th><th class="text-right py-1.5 px-1">Venc.</th><th class="text-right py-1.5 px-1">%</th></tr></thead><tbody>';
+    html += '<div class="bg-slate-900 border border-slate-800 rounded-xl p-4"><h4 class="font-semibold text-sm mb-3">Resultados por Rodada e Configuração <span class="text-[10px] text-slate-500 font-normal">(clique para ver combos vencedores)</span></h4>';
+    html += '<div class="overflow-x-auto -mx-1"><table class="w-full text-[9px] lg:text-[10px]"><thead><tr class="text-slate-500 border-b border-slate-800"><th class="text-left py-1.5 px-1">Rod</th><th class="text-left py-1.5 px-1">Pernas</th><th class="text-left py-1.5 px-1">Empate</th><th class="text-left py-1.5 px-1">Equil.</th><th class="text-right py-1.5 px-1">Venc.</th><th class="text-right py-1.5 px-1">%</th><th class="text-right py-1.5 px-1">Entradas p/ 1</th></tr></thead><tbody>';
     res.sort(function(a,b){ return b.pct - a.pct; });
-    res.forEach(function(r){
+    res.forEach(function(r, ri){
       var pctCls = r.pct > 3 ? 'text-emerald-400' : r.pct > 1 ? 'text-yellow-400' : 'text-red-400';
-      html += '<tr class="border-b border-slate-800/30"><td class="py-1 px-1">'+r.rodada+'</td><td class="py-1 px-1">'+r.legs+'</td><td class="py-1 px-1">'+(r.draw?'✓':'—')+'</td><td class="py-1 px-1">'+(r.balanced?'✓':'—')+'</td><td class="py-1 px-1 text-right">'+r.won+'/'+r.combos+'</td><td class="py-1 px-1 text-right font-bold '+pctCls+'">'+r.pct+'%</td></tr>';
+      var rowId = 'sweep-row-'+ri;
+      html += '<tr class="border-b border-slate-800/30 hover:bg-slate-800/50 cursor-pointer" onclick="toggleSweepDetail(\''+rowId+'\')"><td class="py-1 px-1">'+r.rodada+'</td><td class="py-1 px-1">'+r.legs+'</td><td class="py-1 px-1">'+(r.draw?'✓':'—')+'</td><td class="py-1 px-1">'+(r.balanced?'✓':'—')+'</td><td class="py-1 px-1 text-right">'+r.won+'/'+r.combos+'</td><td class="py-1 px-1 text-right font-bold '+pctCls+'">'+r.pct+'%</td><td class="py-1 px-1 text-right text-slate-400">'+(r.entradas_para_1_acerto||'—')+'</td></tr>';
+      if(r.winning_examples && r.winning_examples.length > 0){
+        html += '<tr id="'+rowId+'" class="hidden"><td colspan="7" class="p-2 bg-slate-800/50"><div class="space-y-1.5">';
+        r.winning_examples.forEach(function(ex){
+          html += '<div class="bg-slate-800 rounded p-1.5 text-[9px]"><div class="flex flex-wrap gap-1">';
+          ex.picks.forEach(function(pk){
+            var hit = pk.pick === pk.result;
+            html += '<span class="px-1 py-0.5 rounded '+ (hit?'bg-emerald-500/20 text-emerald-400':'bg-red-500/20 text-red-400') +'">'+pk.casa+' vs '+pk.visit+' → '+pk.pick+' ('+pk.placar+')</span>';
+          });
+          html += '</div></div>';
+        });
+        html += '</div></td></tr>';
+      }
     });
     html += '</tbody></table></div></div>';
 

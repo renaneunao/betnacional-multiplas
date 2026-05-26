@@ -159,8 +159,19 @@ function getAuth(){
 }
 
 function showLogin(){
-  document.body.innerHTML = '<div class="min-h-screen bg-slate-950 flex items-center justify-center p-4"><div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 lg:p-8 w-full max-w-sm fade-in"><div class="flex items-center gap-3 mb-6"><div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div><h1 class="text-xl font-bold gradient-text">OddStack</h1></div><div class="space-y-3"><input id="login-user" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white" placeholder="usuário" autofocus><input id="login-pass" type="password" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white" placeholder="senha"><button onclick="doLogin()" class="btn-primary w-full text-white font-medium py-2.5 rounded-lg text-sm">Entrar</button></div><p id="login-err" class="text-red-400 text-xs mt-3 hidden">Credenciais inválidas.</p></div></div>';
+  var overlay = document.getElementById('login-overlay');
+  if(overlay){ overlay.classList.remove('hidden'); return; }
+  var div = document.createElement('div');
+  div.id = 'login-overlay';
+  div.className = 'fixed inset-0 z-[200] flex items-center justify-center bg-slate-950 p-4';
+  div.innerHTML = '<div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 lg:p-8 w-full max-w-sm fade-in"><div class="flex items-center gap-3 mb-6"><div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div><h1 class="text-xl font-bold gradient-text">OddStack</h1></div><div class="space-y-3"><input id="login-user" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white" placeholder="usuário" autofocus><input id="login-pass" type="password" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white" placeholder="senha"><button onclick="doLogin()" class="btn-primary w-full text-white font-medium py-2.5 rounded-lg text-sm">Entrar</button></div><p id="login-err" class="text-red-400 text-xs mt-3 hidden">Credenciais inválidas.</p></div>';
+  document.body.appendChild(div);
   document.getElementById('login-pass').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+}
+
+function hideLogin(){
+  var overlay = document.getElementById('login-overlay');
+  if(overlay) overlay.classList.add('hidden');
 }
 
 async function doLogin(){
@@ -168,21 +179,35 @@ async function doLogin(){
   var p = document.getElementById('login-pass').value;
   try {
     var r = await fetch('/api/auth-check', {headers:{'Authorization':'Basic '+btoa(u+':'+p)}});
-    if(r.ok){ setAuth(u,p); location.reload(); }
-    else { document.getElementById('login-err').classList.remove('hidden'); }
+    if(r.ok){
+      setAuth(u,p);
+      hideLogin();
+      var overlay = document.getElementById('login-overlay');
+      if(overlay){ overlay.remove(); }
+      await loadShields();
+      startBalStream();
+      checkClient();
+      var sidebar = document.getElementById('sidebar');
+      if(sidebar){ sidebar.style.display = ''; }
+      if(window.innerWidth >= 1024 && sidebar){ sidebar.classList.add('open'); }
+      navTo('dashboard');
+    } else {
+      document.getElementById('login-err').classList.remove('hidden');
+    }
   } catch(e){ document.getElementById('login-err').classList.remove('hidden'); }
 }
 
-function logout(){ sessionStorage.removeItem('oddstack_auth'); location.reload(); }
+function logout(){ sessionStorage.removeItem('oddstack_auth'); if(balSrc){ balSrc.close(); balSrc = null; } hideLogin(); showLogin(); }
 
 async function api(path, opts){
   opts = opts || {};
   var cred = getAuth();
+  if(!cred){ return null; }
   var parts = cred.split(':');
   opts.headers = opts.headers || {};
   opts.headers['Authorization'] = 'Basic ' + btoa(parts[0]+':'+(parts[1]||''));
   var r = await fetch(path, opts);
-  if(r.status === 401){ sessionStorage.removeItem('oddstack_auth'); showLogin(); throw new Error('auth'); }
+  if(r.status === 401){ sessionStorage.removeItem('oddstack_auth'); if(balSrc){balSrc.close();balSrc=null;} showLogin(); throw new Error('auth'); }
   return r;
 }
 
@@ -553,20 +578,15 @@ window.doLogin = doLogin;
 window.logout = logout;
 
 async function init(){
-  if(!ensureAuth()) return;
+  if(!ensureAuth()){ showLogin(); return; }
   await loadShields();
-
   var sidebar = document.getElementById('sidebar');
   sidebar.style.display = '';
+  if(window.innerWidth >= 1024){ sidebar.classList.add('open'); }
 
   startBalStream();
   checkClient();
   setInterval(checkClient, 120000);
-
-  if(window.innerWidth >= 1024){
-    sidebar.classList.add('open');
-  }
-
   navTo('dashboard');
 }
 

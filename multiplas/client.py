@@ -96,20 +96,18 @@ class BetnacionalAPIClient:
                 if parsed:
                     parsed.start_time = p["data"]
                     result.append(parsed)
-                    logger.info(
-                        "Matched: %s vs %s (%s)",
-                        parsed.home_team, parsed.away_team, p["data"]
-                    )
+                    logger.info("Matched: %s vs %s (%s)", parsed.home_team, parsed.away_team, p["data"])
             else:
                 unmatched.append(f"{p['casa']} vs {p['visitante']} ({p['data']})")
 
         if unmatched:
             logger.warning("Unmatched Cartola games: %s", unmatched)
 
-        logger.info(
-            "Round matches: %d/%d matched from Cartola",
-            len(result), len(cartola.partidas)
-        )
+        if not result:
+            logger.warning("No Cartola matches found. Falling back to all Betnacional matches.")
+            return self.get_matches()
+
+        logger.info("Round matches: %d/%d matched from Cartola", len(result), len(cartola.partidas))
         return result
 
     def get_balance(self) -> float:

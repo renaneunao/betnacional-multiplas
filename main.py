@@ -15,6 +15,7 @@ from multiplas.client import BetnacionalAPIClient
 from multiplas.engine import MultiplesEngine
 from multiplas.config import Config
 from multiplas.models import ExecuteRequest, AnalysisResult
+from multiplas.cartola import cartola_to_betnacional_name
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s - %(message)s")
 logger = logging.getLogger("multiplas.api")
@@ -335,7 +336,101 @@ def get_shields():
     return SHIELDS_CACHE
 
 
-@app.get("/api/client-health")
+@app.get("/api/shadow-test")
+def shadow_test(
+    rodada: int = Query(default=18),
+    num_legs: int = Query(default=10),
+    stake: float = Query(default=1.0),
+    require_draw: bool = Query(default=False),
+    max_odd: float = Query(default=None),
+    max_combos: int = Query(default=500),
+    user: str = Depends(check_auth),
+):
+    try:
+        import requests as req
+        cartola_url = f"https://api.cartola.globo.com/partidas?rodada={rodada}"
+        cartola_data = req.get(cartola_url, timeout=15).json()
+        partidas = cartola_data.get("partidas", [])
+        clubes = cartola_data.get("clubes", {})
+
+        results = {}
+        for p in partidas:
+            if p.get("valida") and p.get("status_transmissao_tr") == "ENCERRADA":
+                casa_id = str(p.get("clube_casa_id"))
+                visitante_id = str(p.get("clube_visitante_id"))
+                casa_name = (clubes.get(casa_id, {}) or {}).get("nome_fantasia", "")
+                visitante_name = (clubes.get(visitante_id, {}) or {}).get("nome_fantasia", "")
+                gols_casa = p.get("placar_oficial_mandante") or 0
+                gols_visitante = p.get("placar_oficial_visitante") or 0
+                if gols_casa > gols_visitante:
+                    resultado = "casa"
+                elif gols_casa < gols_visitante:
+                    resultado = "fora"
+                else:
+                    resultado = "empate"
+                results[f"{casa_name}||{visitante_name}"] = {
+                    "casa": casa_name, "visitante": visitante_name,
+                    "placar": f"{gols_casa}x{gols_visitante}",
+                    "resultado": resultado,
+                }
+
+        if len(results) < 2:
+            return {"error": "Rodada não tem jogos encerrados suficientes.", "jogos_encerrados": len(results)}
+
+        matches = api_client.get_matches()
+        engine = MultiplesEngine(num_legs=num_legs)
+        analysis = engine.analyze(matches, stake=stake, require_draw=require_draw, max_odd=max_odd)
+
+        total = len(analysis.combinations)
+        won = 0
+        winning_combos = []
+
+        for combo in analysis.combinations[:max_combos]:
+            all_correct = True
+            combo_matches = []
+            for e in combo.entries:
+                match_key = f"{e['match']}"
+                found = False
+                for rkey, rval in results.items():
+                    cartola_casa = cartola_to_betnacional_name(rval["casa"])
+                    cartola_visit = cartola_to_betnacional_name(rval["visitante"])
+                    if (cartola_casa in e["match"] or e["match"].split(" vs ")[0] in cartola_casa) and \
+                       (cartola_visit in e["match"] or e["match"].split(" vs ")[1] in cartola_visit):
+                        if e["choice"] != rval["resultado"]:
+                            all_correct = False
+                        combo_matches.append({
+                            "match": e["match"], "choice": e["choice"],
+                            "result": rval["resultado"], "placar": rval["placar"],
+                            "hit": e["choice"] == rval["resultado"],
+                        })
+                        found = True
+                        break
+                if not found:
+                    all_correct = False
+            if all_correct and len(combo_matches) == num_legs:
+                won += 1
+                if len(winning_combos) < 10:
+                    winning_combos.append({
+                        "rank": combo.rank, "matches": combo.matches_summary,
+                        "total_odd": combo.total_odd, "combined_prob": combo.combined_prob,
+                        "details": combo_matches,
+                    })
+
+        return {
+            "rodada": rodada,
+            "jogos_encerrados": len(results),
+            "resultados": [{"casa": r["casa"], "visitante": r["visitante"], "placar": r["placar"], "resultado": r["resultado"]} for r in results.values()],
+            "total_combos": total,
+            "combos_avaliados": min(total, max_combos),
+            "vencedores": won,
+            "taxa_acerto_pct": round(won / max(1, min(total, max_combos)) * 100, 2),
+            "stake_total": min(total, max_combos) * stake,
+            "retorno_estimado": round(won * (sum(c.get("total_odd", 0) for c in winning_combos) / max(1, len(winning_combos))), 2) if winning_combos else 0,
+            "top_vencedores": winning_combos,
+        }
+    except Exception as e:
+        logger.error("Shadow test error: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
 def client_health():
     try:
         import requests as req

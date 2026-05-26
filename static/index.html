@@ -40,7 +40,7 @@ body{font-family:'Inter',sans-serif}
     <a href="#" onclick="navTo('shadow');toggleSidebar(true)" class="sidebar-item flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-slate-400" id="nav-shadow"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Shadow Test</a>
   </nav>
   <div class="p-4 border-t border-slate-800">
-    <div class="flex items-center gap-2 mb-2"><div class="w-2 h-2 rounded-full shadow-sm" id="client-dot" style="background:#334155"></div><span class="text-[10px] text-slate-500" id="client-label">verificando...</span><button onclick="checkAndReconnect()" class="ml-auto text-[10px] text-violet-400 hover:text-violet-300">reconectar</button></div>
+    <div class="flex items-center gap-2 mb-2"><div class="w-2 h-2 rounded-full shadow-sm" id="client-dot" style="background:#334155"></div><span class="text-[10px] text-slate-500" id="client-label">verificando...</span><button onclick="checkAndReconnect()" class="ml-auto text-[10px] text-violet-400 hover:text-violet-300" id="btn-side-reconn">reconectar</button></div>
     <div class="items-center gap-3 opacity-70 hover:opacity-100 transition hidden lg:flex"><div class="w-2 h-2 rounded-full bg-green-400 shadow-sm shadow-green-400/50" id="dot-live"></div><div><p class="text-sm font-semibold" id="bal-side">R$ ---</p><p class="text-[10px] text-slate-500" id="bal-time"></p></div></div>
     <button onclick="logout()" class="mt-3 w-full text-[11px] text-slate-600 hover:text-slate-400 transition">sair</button>
   </div>
@@ -239,7 +239,8 @@ async function api(path, opts){
 
 function startBalStream(){
   var cred = getAuth(); if(!cred) return;
-  balSrc = new EventSource('/api/balance/stream?'+Date.now());
+  var token = btoa(cred);
+  balSrc = new EventSource('/api/balance/stream?token='+encodeURIComponent(token)+'&'+Date.now());
   balSrc.onmessage = function(e){
     var d = JSON.parse(e.data);
     if(d.balance != null){
@@ -267,13 +268,22 @@ async function checkClient(){
     var dot = document.getElementById('client-dot');
     var dotMob = document.getElementById('client-dot-mob');
     var lbl = document.getElementById('client-label');
+    var btn = document.getElementById('btn-side-reconn');
     if(d.status === 'connected'){
       dot.style.background = '#4ade80'; if(dotMob) dotMob.style.background = '#4ade80';
       lbl.textContent = 'conectado';
+      if(btn) btn.textContent = 'reconectar';
       document.getElementById('reconnect-overlay').classList.add('hidden');
     } else {
+      if(Date.now() < reconnectCooldown){
+        dot.style.background = '#fbbf24'; if(dotMob) dotMob.style.background = '#fbbf24';
+        lbl.textContent = 'iniciando...';
+        if(btn) btn.textContent = 'aguarde';
+        return;
+      }
       dot.style.background = '#f87171'; if(dotMob) dotMob.style.background = '#f87171';
       lbl.textContent = d.status === 'error' ? 'erro' : 'offline';
+      if(btn) btn.textContent = 'reconectar';
       document.getElementById('reconnect-msg').textContent = 'Sessão expirada ou cliente offline.';
       document.getElementById('reconnect-detail').textContent = d.detail || d.error || '';
       document.getElementById('reconnect-overlay').classList.remove('hidden');
@@ -281,7 +291,14 @@ async function checkClient(){
   } catch(e){}
 }
 
+var reconnectCooldown = 0;
+
 async function checkAndReconnect(){
+  if(Date.now() < reconnectCooldown){
+    document.getElementById('reconnect-detail').textContent = 'Aguardando cooldown... tente em ' + Math.ceil((reconnectCooldown-Date.now())/1000) + 's';
+    return;
+  }
+  reconnectCooldown = Date.now() + 45000;
   var btn = document.getElementById('btn-reconn');
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner spinner-sm"></div> Reconectando…';
@@ -299,6 +316,7 @@ async function checkAndReconnect(){
           var h = await fetch('/api/client-health').then(function(r){ return r.json(); });
           if(h.status === 'connected'){
             clearInterval(ival);
+            reconnectCooldown = 0;
             document.getElementById('reconnect-overlay').classList.add('hidden');
             var dot = document.getElementById('client-dot'); dot.style.background = '#4ade80';
             var dm = document.getElementById('client-dot-mob'); if(dm) dm.style.background = '#4ade80';

@@ -288,7 +288,21 @@ def status(user: str = Depends(check_auth)):
 
 
 @app.get("/api/balance/stream")
-def balance_stream(user: str = Depends(check_auth)):
+def balance_stream(token: str = Query(default="")):
+    valid = False
+    if token:
+        import base64
+        try:
+            decoded = base64.b64decode(token).decode()
+            user, passwd = decoded.split(":", 1)
+            valid = secrets.compare_digest(user, DASH_USER) and secrets.compare_digest(passwd, DASH_PASS)
+        except Exception:
+            pass
+    if not valid:
+        def bad():
+            yield f"data: {json.dumps({'error': 'unauthorized'})}\n\n"
+        return StreamingResponse(bad(), media_type="text/event-stream", headers={"Cache-Control": "no-cache"}, status_code=200)
+
     def generate():
         while True:
             try:

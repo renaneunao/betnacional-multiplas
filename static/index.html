@@ -342,7 +342,7 @@ function navTo(s){
   if(s === 'dashboard') loadDashboard();
   if(s === 'active') loadActive();
   if(s === 'history') loadHistory();
-  if(s === 'shadow') loadShadow();
+  if(s === 'shadow'){ console.log('[Nav] shadow triggered'); loadShadow(); }
 }
 
 async function loadDashboard(){
@@ -628,10 +628,14 @@ async function init(){
 }
 
 async function loadShadow(){
+  console.log('[Shadow] Iniciando sweep...');
   document.getElementById('shadow-loading').classList.remove('hidden');
   document.getElementById('shadow-content').innerHTML = '';
   try {
-    var d = await api('/api/shadow-sweep').then(function(r){ return r.json(); });
+    console.log('[Shadow] Chamando /api/shadow-sweep...');
+    var t0 = Date.now();
+    var d = await api('/api/shadow-sweep').then(function(r){ console.log('[Shadow] Sweep HTTP '+r.status); return r.json(); });
+    console.log('[Shadow] Sweep recebido em '+(Date.now()-t0)+'ms, tests_run:', d.insights?.tests_run);
     if(d.error){ document.getElementById('shadow-content').innerHTML = '<p class="text-red-400 text-sm">'+d.error+'</p>'; return; }
     var ins = d.insights;
     var res = d.results || [];
@@ -677,7 +681,8 @@ async function loadShadow(){
 
     document.getElementById('shadow-content').innerHTML = html;
     document.getElementById('shadow-loading').classList.add('hidden');
-  } catch(e){ document.getElementById('shadow-content').innerHTML = '<p class="text-red-400 text-sm py-4 text-center">Erro: '+e.message+'</p>'; document.getElementById('shadow-loading').classList.add('hidden'); }
+    console.log('[Shadow] Concluído.');
+  } catch(e){ document.getElementById('shadow-content').innerHTML = '<p class="text-red-400 text-sm py-4 text-center">Erro: '+e.message+'</p>'; document.getElementById('shadow-loading').classList.add('hidden'); console.error('[Shadow] Erro:', e); }
 }
 
 async function runShadow(){

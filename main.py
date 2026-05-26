@@ -517,7 +517,7 @@ def shadow_sweep(user: str = Depends(check_auth)):
                             if not any(o[1] == "empate" for o in outcome_combo):
                                 continue
                         total_combos += 1
-                        if total_combos > 500:
+                        if total_combos > 200:
                             break
                         if all(o[0]["result"] == o[1] for o in outcome_combo):
                             won += 1
@@ -525,7 +525,7 @@ def shadow_sweep(user: str = Depends(check_auth)):
                                 winning_examples.append({
                                     "picks": [{"casa": o[0]["casa"], "visit": o[0]["visit"], "pick": o[1], "result": o[0]["result"], "placar": o[0]["placar"]} for o in outcome_combo]
                                 })
-                    if total_combos > 500:
+                    if total_combos > 200:
                         break
 
                 pct = round(won / max(1, total_combos) * 100, 2)

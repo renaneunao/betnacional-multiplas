@@ -459,7 +459,7 @@ def shadow_sweep(user: str = Depends(check_auth)):
         return SWEEP_CACHE
 
     import requests as req
-    rounds = list(range(1, 18))
+    rounds = list(range(13, 18))
     legs_list = [3, 4, 5, 10]
     configs = [
         {"draw": False, "balanced": False},
@@ -467,7 +467,7 @@ def shadow_sweep(user: str = Depends(check_auth)):
         {"draw": False, "balanced": True},
         {"draw": True, "balanced": True},
     ]
-    max_combos = 100
+    max_combos = 30
     results = []
     total_tests = len(rounds) * len(legs_list) * len(configs)
     done = 0

@@ -21,6 +21,7 @@ class MultiplesEngine:
         require_draw: bool = False,
         max_odd: Optional[float] = None,
         mixed_count: Optional[int] = None,
+        min_favorite_odd: Optional[float] = None,
     ) -> AnalysisResult:
         if len(matches) < self.num_legs:
             return AnalysisResult(
@@ -28,9 +29,26 @@ class MultiplesEngine:
                 total_combinations=0, stake_per_bet=stake, total_stake=0, combinations=[]
             )
 
+        filtered_matches = matches
+        if min_favorite_odd is not None:
+            filtered_matches = [
+                m for m in matches
+                if min(o.odd for o in m.outcomes) <= min_favorite_odd
+            ]
+            logger.info(
+                "Filtered matches by favorite odd <= %.2f: %d -> %d",
+                min_favorite_odd, len(matches), len(filtered_matches)
+            )
+
+        if len(filtered_matches) < self.num_legs:
+            return AnalysisResult(
+                num_matches=len(filtered_matches), num_legs=self.num_legs,
+                total_combinations=0, stake_per_bet=stake, total_stake=0, combinations=[]
+            )
+
         all_combos: List[Combination] = []
 
-        for match_combo in combinations(matches, self.num_legs):
+        for match_combo in combinations(filtered_matches, self.num_legs):
             outcome_lists = [[(m, o) for o in m.outcomes] for m in match_combo]
 
             for outcome_combo in product(*outcome_lists):

@@ -78,6 +78,7 @@ def analyze(
     require_draw: bool = Query(default=False, description="Only combos with at least one draw"),
     max_odd: float = Query(default=None, description="Filter outcomes with odd > this value"),
     mixed: int = Query(default=None, description="Select N diverse combos across probability tiers"),
+    min_fav_odd: float = Query(default=None, description="Remove matches where favorite odd > this"),
     rodada: int = Query(default=None, description="Cartola round number"),
     user: str = Depends(check_auth),
 ):
@@ -86,7 +87,7 @@ def analyze(
         n_stake = stake or Config.STAKE
         matches = api_client.get_round_matches(rodada=rodada)
         engine = MultiplesEngine(num_legs=n_legs)
-        result = engine.analyze(matches, stake=n_stake, require_draw=require_draw, max_odd=max_odd, mixed_count=mixed)
+        result = engine.analyze(matches, stake=n_stake, require_draw=require_draw, max_odd=max_odd, mixed_count=mixed, min_favorite_odd=min_fav_odd)
         if len(result.combinations) > limit:
             result.combinations = result.combinations[:limit]
         return result
@@ -343,6 +344,7 @@ def shadow_test(
     stake: float = Query(default=1.0),
     require_draw: bool = Query(default=False),
     max_odd: float = Query(default=None),
+    min_fav_odd: float = Query(default=None),
     max_combos: int = Query(default=500),
     user: str = Depends(check_auth),
 ):
@@ -379,7 +381,7 @@ def shadow_test(
 
         matches = api_client.get_matches()
         engine = MultiplesEngine(num_legs=num_legs)
-        analysis = engine.analyze(matches, stake=stake, require_draw=require_draw, max_odd=max_odd)
+        analysis = engine.analyze(matches, stake=stake, require_draw=require_draw, max_odd=max_odd, min_favorite_odd=min_fav_odd)
 
         total = len(analysis.combinations)
         won = 0

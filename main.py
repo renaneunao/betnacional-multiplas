@@ -472,6 +472,8 @@ def shadow_sweep(user: str = Depends(check_auth)):
     total_tests = len(rounds) * len(legs_list) * len(configs)
     done = 0
 
+    matches = api_client.get_matches()
+
     for rodada in rounds:
         try:
             cartola_url = f"https://api.cartola.globo.com/partidas/{rodada}"
@@ -496,8 +498,6 @@ def shadow_sweep(user: str = Depends(check_auth)):
 
         if len(match_results) < 4:
             continue
-
-        matches = api_client.get_matches()
 
         for legs in legs_list:
             for cfg in configs:
@@ -581,6 +581,9 @@ def shadow_sweep(user: str = Depends(check_auth)):
 
     SWEEP_CACHE = {"insights": insights, "results": results, "_ts": time.time()}
     return SWEEP_CACHE
+
+
+@app.get("/api/client-health")
 def client_health():
     try:
         import requests as req

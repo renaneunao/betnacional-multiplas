@@ -37,6 +37,7 @@ body{font-family:'Inter',sans-serif}
     <a href="#" onclick="navTo('create');toggleSidebar(true)" class="sidebar-item flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-slate-400" id="nav-create"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Criar Lote</a>
     <a href="#" onclick="navTo('active');toggleSidebar(true)" class="sidebar-item flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-slate-400" id="nav-active"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Ativas <span id="badge-active" class="ml-auto bg-violet-600 text-[10px] px-1.5 py-0.5 rounded-full"></span></a>
     <a href="#" onclick="navTo('history');toggleSidebar(true)" class="sidebar-item flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-slate-400" id="nav-history"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Histórico</a>
+    <a href="#" onclick="navTo('shadow');toggleSidebar(true)" class="sidebar-item flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-slate-400" id="nav-shadow"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Shadow Test</a>
   </nav>
   <div class="p-4 border-t border-slate-800">
     <div class="flex items-center gap-2 mb-2"><div class="w-2 h-2 rounded-full shadow-sm" id="client-dot" style="background:#334155"></div><span class="text-[10px] text-slate-500" id="client-label">verificando...</span><button onclick="checkAndReconnect()" class="ml-auto text-[10px] text-violet-400 hover:text-violet-300">reconectar</button></div>
@@ -93,6 +94,30 @@ body{font-family:'Inter',sans-serif}
 </section>
 
 <section id="sec-history" class="hidden"><h2 class="text-lg lg:text-xl font-bold mb-4 lg:mb-6">Histórico</h2><div id="hist-list"><div class="py-12 text-center"><div class="spinner mx-auto"></div></div></div></section>
+
+<section id="sec-shadow" class="hidden">
+  <h2 class="text-lg lg:text-xl font-bold mb-4 lg:mb-6">Shadow Test</h2>
+  <p class="text-xs text-slate-500 mb-4">Simula múltiplas em rodadas passadas usando os resultados reais do Cartola. Ajuda a calibrar número de entradas, filtros e estratégia.</p>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+      <h3 class="font-semibold text-sm mb-3">Configuração</h3>
+      <div class="space-y-2">
+        <div class="flex items-center gap-2"><label class="text-xs text-slate-400 w-20">Rodada</label><select id="s-rodada" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white"></select></div>
+        <div class="flex items-center gap-2"><label class="text-xs text-slate-400 w-20">Pernas</label><select id="s-legs" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white"><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="10">10</option></select></div>
+        <div class="flex items-center gap-2"><label class="text-xs text-slate-400 w-20">Avaliar</label><select id="s-limit" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white"><option value="100">100 combos</option><option value="300" selected>300 combos</option><option value="500">500 combos</option><option value="1000">1000 combos</option></select></div>
+      </div>
+      <div class="border-t border-slate-800 pt-3 mt-3 space-y-2">
+        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="s-draw" class="rounded bg-slate-700 border-slate-600 text-violet-600" checked><span class="text-[11px] text-slate-300">Exigir empate</span></label>
+        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="s-nobal" class="rounded bg-slate-700 border-slate-600 text-violet-600" checked><span class="text-[11px] text-slate-300">Remover equilibrados</span></label>
+        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="s-multi" class="rounded bg-slate-700 border-slate-600 text-violet-600"><span class="text-[11px] text-slate-300">Múltiplas configs</span><span class="text-[9px] text-slate-500 cursor-help" title="Testa 3, 4 e 10 pernas de uma vez">&#9432;</span></label>
+      </div>
+      <button onclick="runShadow()" class="btn-primary w-full mt-3 text-white font-medium py-2 rounded-lg text-sm flex items-center justify-center gap-2" id="btn-shadow"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Executar</button>
+    </div>
+    <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-xl p-4" id="shadow-results">
+      <p class="text-slate-600 text-sm py-8 text-center">Selecione os parâmetros e execute o shadow test.</p>
+    </div>
+  </div>
+</section>
 
 <!-- MODALS -->
 <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-2 lg:p-4"><div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-xl max-h-[90vh] lg:max-h-[85vh] overflow-y-auto"><div class="sticky top-0 bg-slate-900 border-b border-slate-800 p-3 lg:p-4 flex items-center justify-between rounded-t-2xl"><h3 class="font-bold text-xs lg:text-sm" id="modal-tit"></h3><button onclick="closeModal()" class="text-slate-500 hover:text-white text-xl">&times;</button></div><div class="p-3 lg:p-4" id="modal-body"></div></div></div>
@@ -581,6 +606,7 @@ window.toggleSidebar = toggleSidebar;
 window.checkAndReconnect = checkAndReconnect;
 window.doLogin = doLogin;
 window.logout = logout;
+window.runShadow = runShadow;
 
 async function init(){
   buildRoundDropdown();
@@ -595,10 +621,69 @@ async function init(){
   navTo('dashboard');
 }
 
+async function runShadow(){
+  var rodada = +document.getElementById('s-rodada').value;
+  var legs = +document.getElementById('s-legs').value;
+  var limit = +document.getElementById('s-limit').value;
+  var draw = document.getElementById('s-draw').checked;
+  var nobal = document.getElementById('s-nobal').checked;
+  var multi = document.getElementById('s-multi').checked;
+  var btn = document.getElementById('btn-shadow');
+  btn.disabled = true; btn.innerHTML = '<div class="spinner spinner-sm"></div> Executando…';
+  document.getElementById('shadow-results').innerHTML = '<div class="py-12 text-center"><div class="spinner mx-auto"></div><p class="text-xs text-slate-500 mt-2">Simulando…</p></div>';
+  try {
+    var legTests = multi ? [3, 4, 10] : [legs];
+    var html = '';
+    for(var li = 0; li < legTests.length; li++){
+      var L = legTests[li];
+      var params = 'rodada='+rodada+'&num_legs='+L+'&max_combos='+limit;
+      if(draw) params += '&require_draw=true';
+      if(nobal) params += '&min_fav_odd=1.85';
+      var r = await api('/api/shadow-test?'+params);
+      var d = await r.json();
+      if(d.error){ html += '<p class="text-red-400 text-sm">'+d.error+'</p>'; continue; }
+      var pct = d.taxa_acerto_pct;
+      var cls = pct > 5 ? 'text-emerald-400' : pct > 1 ? 'text-yellow-400' : 'text-red-400';
+      html += '<div class="mb-4"><h4 class="font-semibold text-sm mb-2">'+L+' pernas'+(draw?' + empate':'')+(nobal?' + sem equilibrados':'')+'</h4>';
+      html += '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3 text-[10px] lg:text-xs">';
+      html += '<div class="bg-slate-800 rounded-lg p-2 text-center"><span class="text-slate-500">Jogos</span><p class="font-bold">'+d.jogos_encerrados+'</p></div>';
+      html += '<div class="bg-slate-800 rounded-lg p-2 text-center"><span class="text-slate-500">Combos</span><p class="font-bold">'+d.total_combos+'</p></div>';
+      html += '<div class="bg-slate-800 rounded-lg p-2 text-center"><span class="text-slate-500">Avaliados</span><p class="font-bold">'+d.combos_avaliados+'</p></div>';
+      html += '<div class="bg-slate-800 rounded-lg p-2 text-center"><span class="text-slate-500">Vencedores</span><p class="font-bold '+cls+'">'+d.vencedores+' ('+d.taxa_acerto_pct+'%)</p></div>';
+      html += '</div>';
+      html += '<p class="text-[10px] text-slate-500 mb-2">Stake total simulado: <b>R$'+d.stake_total.toFixed(2)+'</b></p>';
+      html += '<details class="mb-2"><summary class="text-[10px] text-slate-400 cursor-pointer">Resultados da rodada</summary><div class="grid grid-cols-2 sm:grid-cols-3 gap-1 mt-2 text-[9px] lg:text-[10px]">';
+      (d.resultados||[]).forEach(function(rr){
+        var rc = rr.resultado === 'casa' ? 'text-blue-400' : rr.resultado === 'fora' ? 'text-emerald-400' : 'text-amber-400';
+        html += '<div class="bg-slate-800 rounded p-1.5"><span class="text-slate-300">'+rr.casa+' vs '+rr.visitante+'</span><br><span class="text-slate-500">'+rr.placar+'</span> <span class="'+rc+'">'+rr.resultado+'</span></div>';
+      });
+      html += '</div></details>';
+      if(d.top_vencedores && d.top_vencedores.length > 0){
+        html += '<details open><summary class="text-[10px] text-emerald-400 cursor-pointer font-semibold">Combos vencedores ('+d.top_vencedores.length+' exibidos)</summary><div class="space-y-1 mt-2">';
+        d.top_vencedores.forEach(function(w){
+          html += '<div class="bg-slate-800 rounded-lg p-2 text-[10px]"><div class="flex items-center gap-2 mb-1"><span class="font-bold text-violet-400">#'+w.rank+'</span><span class="text-slate-400">Odd '+w.total_odd+'</span><span class="text-emerald-400">Prob '+(w.combined_prob*100).toFixed(2)+'%</span></div>';
+          (w.details||[]).forEach(function(dt){
+            html += '<div class="flex items-center gap-1 text-[9px]"><span class="'+ (dt.hit?'text-emerald-400':'text-red-400')+'">'+(dt.hit?'✓':'✗')+'</span><span class="text-slate-400">'+dt.match+' → '+dt.choice+'</span><span class="text-slate-500">('+dt.placar+' '+dt.result+')</span></div>';
+          });
+          html += '</div>';
+        });
+        html += '</div></details>';
+      }
+      html += '</div>';
+    }
+    document.getElementById('shadow-results').innerHTML = html || '<p class="text-slate-500 text-sm py-8 text-center">Nenhum resultado.</p>';
+  } catch(e){ document.getElementById('shadow-results').innerHTML = '<p class="text-red-400 text-sm py-4 text-center">Erro: '+e.message+'</p>'; }
+  btn.disabled = false; btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Executar';
+}
+
 function buildRoundDropdown(){
-  var sel = document.getElementById('p-rodada');
-  if(!sel) return;
-  for(var i=1; i<=38; i++){ sel.innerHTML += '<option value="'+i+'"'+(i===18?' selected':'')+'>Rodada '+i+'</option>'; }
+  var sel1 = document.getElementById('p-rodada');
+  var sel2 = document.getElementById('s-rodada');
+  for(var i=1; i<=38; i++){
+    var opt = '<option value="'+i+'"'+(i===17?' selected':'')+'>Rodada '+i+'</option>';
+    if(sel1) sel1.innerHTML += opt;
+    if(sel2) sel2.innerHTML += opt;
+  }
 }
 
 init();

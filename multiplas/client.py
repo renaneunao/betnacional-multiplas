@@ -46,7 +46,7 @@ class BetnacionalAPIClient:
     def parse_match(self, m: dict) -> Optional[MatchOdds]:
         outcomes = []
         for market in m.get("markets", []):
-            if market.get("id") == "1":
+            if market.get("id") == "1" or "Resultado" in (market.get("name") or ""):
                 for o in market.get("outcomes", []):
                     odd = float(o["value"])
                     outcomes.append(Outcome(
